@@ -161,8 +161,8 @@ async function buildWorld(progress) {
   scene.add(buildWideMesh(terrainMat));
   progress('hardware');
   const lm = await loadLM();
-  scene.add(lm.lm); models.lm = lm;
-  models.surveyor = buildSurveyor(); scene.add(models.surveyor.group);
+  scene.add(lm.lm, lm.photo); models.lm = lm;
+  models.surveyor = buildSurveyor(); scene.add(models.surveyor.group, models.surveyor.photo);
   models.flag = buildFlag(); scene.add(models.flag);
   models.dish = buildDish(); scene.add(models.dish.group);
   models.swc = buildSWC(); scene.add(models.swc.group);
@@ -175,7 +175,7 @@ async function buildWorld(progress) {
   }
   progress('rocks');
   models.rocks = buildRocks([
-    { e: CAMERAS[1].pos[0], n: CAMERAS[1].pos[1], r: 55, avoid: [[0, 0, 6], [CAMERAS[1].pos[0], CAMERAS[1].pos[1], 1.2], [-4.2, 14.6, 1], [0.2, 8.5, 2.5]] },
+    { e: CAMERAS[1].pos[0], n: CAMERAS[1].pos[1], r: 30, avoid: [[0, 0, 6], [CAMERAS[1].pos[0], CAMERAS[1].pos[1], 1.2], [-4.2, 14.6, 1], [0.2, 8.5, 2.5]] },
     { e: CAMERAS[2].pos[0], n: CAMERAS[2].pos[1], r: 45, avoid: [[118.1, -103.1, 2.8], [CAMERAS[2].pos[0], CAMERAS[2].pos[1], 1.2]] },
   ]);
   scene.add(models.rocks);
@@ -273,8 +273,31 @@ function applyTime(t) {
   const M = models;
   M.lm.lm.visible = t >= DATES.touchdown;
   M.lm.ascent.visible = t < DATES.liftoff;
+  M.lm.photo.visible = M.lm.lm.visible;
+  {
+    // relight the photo: it was taken with the Sun about 10 deg up, 64 deg to the side of the view.
+    const toCam = new THREE.Vector3(camPos.x - M.lm.lm.position.x, 0, camPos.z - M.lm.lm.position.z).normalize();
+    const sunH = new THREE.Vector3(sunW.x, 0, sunW.z).normalize();
+    const side = THREE.MathUtils.clamp((0.22 + 0.78 * Math.max(0, sunH.dot(toCam))) / (0.22 + 0.78 * 0.44), 0.25, 1.5);
+    const tint = new THREE.Color().copy(sunLight.color).multiplyScalar(physSun * side)
+      .add(new THREE.Color(0.78, 0.85, 1.0).multiplyScalar(physEarth * 0.6));
+    M.lm.setPhoto(0.1 * S, tint, camPos, t >= DATES.liftoff);
+  }
   M.surveyor.group.visible = t >= DATES.surveyorLands;
   M.surveyor.setDusty(t >= DATES.touchdown);
+  M.surveyor.photo.visible = M.surveyor.group.visible;
+  {
+    // photo taken with the Sun ~17 deg up, 41 deg to the side of the view. 1967: white paint; from 1969 shown tan
+    // (the photo is black and white; when the paint turned tan is not known, so we switch at the Apollo landing)
+    const sp = M.surveyor.photo.position;
+    const toCam = new THREE.Vector3(camPos.x - sp.x, 0, camPos.z - sp.z).normalize();
+    const sunH = new THREE.Vector3(sunW.x, 0, sunW.z).normalize();
+    const side = THREE.MathUtils.clamp((0.22 + 0.78 * Math.max(0, sunH.dot(toCam))) / (0.22 + 0.78 * 0.75), 0.25, 1.3);
+    const paint = t >= DATES.touchdown ? new THREE.Color(1.0, 0.9, 0.74) : new THREE.Color(1.25, 1.25, 1.22);
+    const tint = new THREE.Color().copy(sunLight.color).multiplyScalar(physSun * side)
+      .add(new THREE.Color(0.78, 0.85, 1.0).multiplyScalar(physEarth * 0.6)).multiply(paint);
+    M.surveyor.setPhoto(t, 0.05 * S, tint, camPos);
+  }
   M.surveyor.camera.visible = t < Date.parse('1969-11-20T06:48:52Z');
   M.surveyor.scoop.visible = t < Date.parse('1969-11-20T06:50:43Z');
   M.flag.visible = t >= DATES.flagUp;

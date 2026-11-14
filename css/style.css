@@ -1,0 +1,51 @@
+/* 1996 homepage. Deliberately plain. */
+:root { color-scheme: dark; }
+body { background: #000 url('../assets/stars-tile.png'); color: #e8e8e8; font-family: "Times New Roman", Times, serif; margin: 8px; font-size: 17px; }
+h1 { font-family: "Arial Black", Impact, sans-serif; color: #ffd700; letter-spacing: 3px; margin: 14px 0 2px; font-size: clamp(22px, 5vw, 40px); }
+h2 { color: #ffd700; font-size: 20px; margin: 6px 0; }
+.sub { margin: 0 0 10px; color: #aaa; font-size: 15px; }
+a { color: #6ab0ff; } a:visited { color: #c28cff; }
+#view { position: relative; width: min(100%, 1100px); aspect-ratio: 16 / 9; background: #000; border: 2px inset #777; overflow: hidden; touch-action: none; cursor: grab; text-align: left; }
+#view:fullscreen { width: 100vw; height: 100vh; aspect-ratio: auto; border: 0; }
+#scene { width: 100%; height: 100%; display: block; }
+#osd { position: absolute; left: 10px; bottom: 8px; font: 15px "Courier New", monospace; color: #fff; text-shadow: 1px 1px 0 #000, 0 0 3px #000; pointer-events: none; }
+.rec { color: #f22; }
+#loading, #nosignal { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; font: 22px "Courier New", monospace; color: #ddd; background: #000; text-align: center; }
+#nosignal { background: repeating-linear-gradient(0deg, #111 0 2px, #1a1a1a 2px 4px); }
+[hidden] { display: none !important; }
+#debug { position: absolute; top: 0; left: 0; right: 0; margin: 0; padding: 4px; font: 11px monospace; color: #0f0; background: rgba(0,0,0,.6); white-space: pre-wrap; pointer-events: none; }
+#labels { position: absolute; inset: 0; pointer-events: none; }
+.label { position: absolute; transform: translate(-50%, -100%); font: 13px "Courier New", monospace; color: #ff0; background: rgba(0,0,0,.55); border: 1px solid #ff0; padding: 1px 4px; white-space: nowrap; pointer-events: auto; cursor: pointer; }
+.label::after { content: ''; position: absolute; left: 50%; top: 100%; width: 1px; height: 14px; background: #ff0; }
+.controls { margin: 8px auto 2px; border: 2px outset #888; background: #c0c0c0; color: #000; font-family: Arial, sans-serif; font-size: 14px; }
+.controls td { padding: 4px 6px; }
+button { font: 13px Arial, sans-serif; background: #c0c0c0; color: #000; border: 2px outset #eee; padding: 3px 7px; margin: 1px; cursor: pointer; user-select: none; -webkit-user-select: none; touch-action: none; }
+button:active, button.on { border-style: inset; background: #a8a8a8; }
+input[type=datetime-local] { font: 13px Arial, sans-serif; }
+.controls a { color: #00e; }
+.jumps { max-width: 1100px; margin: 8px 0; line-height: 1.6; }
+.tickerbox { max-width: 1100px; border: 1px dashed #ffd700; padding: 5px 10px; color: #fff; font-size: 16px; min-height: 22px; }
+.tickerbox b { color: #ffd700; }
+.readout { font: 13px "Courier New", monospace; color: #9c9; }
+.lower { text-align: left; }
+.lower td { padding: 0 12px; }
+#layers label { display: block; margin: 3px 0; font-size: 15px; }
+.small { font-size: 14px; color: #aaa; }
+.uc { color: #ff0; font-family: "Arial Black", sans-serif; font-size: 13px; animation: blink 1.2s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.counter { font: bold 18px "Courier New", monospace; background: #000; color: #0f0; border: 2px inset #777; padding: 0 4px; letter-spacing: 2px; }
+.footer { font-size: 15px; }
+#sheet { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 10; display: flex; align-items: center; justify-content: center; }
+.sheetin { max-width: 620px; width: calc(100% - 32px); max-height: 85vh; overflow: auto; background: #fffff0; color: #000; border: 3px double #000; padding: 12px 16px; text-align: left; font-family: "Courier New", monospace; font-size: 15px; }
+.sheetin h3 { margin: 0 0 8px; font-family: Arial, sans-serif; }
+.sheetin small { color: #a00; }
+.sheetin table { border-collapse: collapse; margin: 6px 0; }
+.sheetin td { border: 1px solid #000; padding: 2px 6px; }
+.sheetin .src { font-size: 12px; color: #444; }
+#sheetClose { float: right; }
+@media (max-width: 760px) {
+  body { margin: 4px; font-size: 16px; }
+  .lower, .lower tr, .lower td { display: block; width: 100% !important; }
+  .controls td { display: block; }
+  #osd { font-size: 12px; }
+}

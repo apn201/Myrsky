@@ -62,3 +62,8 @@ input[type=datetime-local] { font: 13px Arial, sans-serif; }
 body.embed { margin: 0; background: #000; overflow: hidden; }
 body.embed center > *:not(#view) { display: none !important; }
 body.embed #view { width: 100vw; height: 100vh; aspect-ratio: auto; border: 0; }
+
+.srclink { font: 12px "Courier New", monospace; color: #8cf; pointer-events: auto; }
+#caption .srclink { color: #ffd700; }
+ul.src { margin: 2px 0 6px 18px; padding: 0; font-size: 13px; }
+ul.src a { color: #00e; }

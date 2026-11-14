@@ -5,7 +5,8 @@ import { skyState, sunCovered, eqjFromRaDec, SITE } from './sky.js';
 import { loadTerrain, heightTexture, buildTerrainMesh, buildWideMesh, terrainMaterial, heightAt, lineOfSight } from './terrain.js';
 import { loadLM, buildSurveyor, buildFlag, buildDish, buildSWC, buildALSEP, buildBackpacks, buildWebcam, buildRocks, w } from './models.js';
 import { createPost } from './post.js';
-import { DATES, POS, CAMERAS, OBJECTS, JUMPS, TICKER, TOUR, PU238_HALF_LIFE_Y, RTG_HEAT0_W } from './data.js';
+import { DATES, POS, CAMERAS, OBJECTS, JUMPS, TICKER, TOUR, SRC, PU238_HALF_LIFE_Y, RTG_HEAT0_W } from './data.js';
+const srcLink = (k) => SRC[k] ? `<a href="${SRC[k][1]}" target="_blank" rel="noopener">${SRC[k][0]}</a>` : '';
 
 const D2R = Math.PI / 180;
 const $ = (id) => document.getElementById(id);
@@ -424,7 +425,7 @@ function tourStep(i) {
   const s = TOUR[i];
   const show = () => {
     if (s.aimEarth) aimAtEarth(s, s.live ? Date.now() : s.t);
-    $('caption').innerHTML = (s.label ? `<small>${s.label}</small>` : '') + s.text; $('caption').hidden = false;
+    $('caption').innerHTML = (s.label ? `<small>${s.label}</small>` : '') + s.text + (s.src && SRC[s.src] ? ` <a class="srclink" href="${SRC[s.src][1]}" target="_blank" rel="noopener" title="${SRC[s.src][0]}">[source]</a>` : ''); $('caption').hidden = false;
     if (state.cam !== s.cam) { setCam(s.cam, true); state.yaw = s.yaw; state.pitch = s.pitch; state.fov = s.fov; }
     else glideTo(s.yaw, s.pitch, s.fov, i === 0 ? 0.01 : 1.8);
     if (s.live) { state.live = true; state.speed = 0; } else { state.live = false; state.t = s.t; state.speed = s.speed || 0; }
@@ -554,6 +555,7 @@ function openSheet(id) {
   }
   if (o.facts.length) html += '<table>' + o.facts.map(([a, b]) => `<tr><td>${a}</td><td>${b}</td></tr>`).join('') + '</table>';
   html += `<p class="src">Sources: ${o.src}</p>`;
+  if (o.links) html += '<p class="src"><b>Check the facts:</b></p><ul class="src">' + o.links.map((k) => `<li>${srcLink(k)}</li>`).join('') + '</ul>';
   $('sheetBody').innerHTML = html; $('sheet').hidden = false;
 }
 window.oosSheet = openSheet;
@@ -575,7 +577,7 @@ window.oosShoot = async (names, prefix = '') => {
 };
 window.oosShot = (name) => { for (let i = 0; i < 4; i++) post.render(scene, camera, performance.now(), true); const u = canvas.toDataURL('image/jpeg', 0.92); return fetch('/__shot?name=' + encodeURIComponent(name), { method: 'POST', body: u }).then((r) => r.status); };
 
-function tickerText(t) { const x = TICKER.find((k) => t >= k.from && t < k.to); return x ? x.text : ''; }
+function tickerItem(t) { return TICKER.find((k) => t >= k.from && t < k.to); }
 
 // ------------------------------------------------------------------ loop
 let burstT = 0;
@@ -616,8 +618,8 @@ function loop(now) {
   // overlay text
   const mode = state.live ? '<span class="rec">&#9679;</span> LIVE' : state.speed ? (state.speed < 0 ? '&#9664;&#9664; REW ' : '&#9654;&#9654; FF ') + speedLabel(state.speed) : 'PAUSED';
   $('osd').innerHTML = `${CAMERAS[state.cam].name} &nbsp; ${fmt(state.t)} UTC &nbsp; ${mode}`;
-  const tk = tickerText(state.t);
-  if (tk !== lastTick) { $('ticker').textContent = tk; lastTick = tk; }
+  const ti = tickerItem(state.t); const tk = ti ? ti.text : '';
+  if (tk !== lastTick) { $('ticker').textContent = tk; if (ti && ti.src && SRC[ti.src]) $('ticker').insertAdjacentHTML('beforeend', ` <a class="srclink" href="${SRC[ti.src][1]}" target="_blank" rel="noopener" title="${SRC[ti.src][0]}">[source]</a>`); lastTick = tk; }
   if (document.activeElement !== $('date') && (frame % 10 === 0)) $('date').value = new Date(state.t).toISOString().slice(0, 16);
   $('readout').textContent = `Sun ${s.sunAzEl.el.toFixed(1)}° up, azimuth ${s.sunAzEl.az.toFixed(0)}° | Earth ${s.earthAzEl.el.toFixed(1)}° up, ${(s.earthLit * 100).toFixed(0)}% lit | looking ${state.yaw.toFixed(0)}°, zoom ${(50 / state.fov).toFixed(1)}x`;
   if (DEBUG) {

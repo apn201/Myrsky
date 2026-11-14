@@ -98,6 +98,15 @@ The visitor counter
 <h2>The 57-year coincidence</h2>
 <p>This page was built on 14-15 November 2026: 57 years to the day after Apollo 12 launched (14 November 1969, 16:22 UTC, struck by lightning twice on the way up).</p>
 
+<h2>Check the facts yourself</h2>
+<p>Every date, position and number on this site comes from a document you can open. The spec sheets and the "did you know" lines link to the exact chapter. Here is the full list:</p>
+<ul id="srclist"></ul>
+<p>Event times are converted from mission elapsed time (launch 14 Nov 1969, 16:22:00 UTC) using the journal transcripts. Positions in metres from the lander are in <code>data/positions/positions.csv</code> in the source code, with the source for each row.</p>
+<script type="module">
+import { SRC } from './js/data.js';
+document.getElementById('srclist').innerHTML = Object.values(SRC).map(([t, u]) => `<li><a href="${u}" target="_blank" rel="noopener">${t}</a></li>`).join('');
+</script>
+
 <h2>Sources and credits</h2>
 <p>NASA data and resources:</p>
 <ul>

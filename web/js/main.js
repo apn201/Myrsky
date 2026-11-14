@@ -11,6 +11,7 @@ const D2R = Math.PI / 180;
 const $ = (id) => document.getElementById(id);
 const qs = new URLSearchParams(location.search);
 const DEBUG = qs.has('debug');
+const LOW = matchMedia('(pointer: coarse)').matches || qs.has('low'); // phones: lighter settings
 if (qs.has('embed')) document.body.classList.add('embed');
 
 // ------------------------------------------------------------------ state (the only state)
@@ -56,14 +57,14 @@ function shareURL() {
 const view = $('view');
 const canvas = $('scene');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.setPixelRatio(LOW ? 1 : Math.min(window.devicePixelRatio, 1.5));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0, 0, 0);
 const camera = new THREE.PerspectiveCamera(50, 16 / 9, 0.1, 30000);
-const post = createPost(renderer);
+const post = createPost(renderer, LOW ? 0 : 4);
 
 function resize() {
   const r = view.getBoundingClientRect();
@@ -77,10 +78,12 @@ window.addEventListener('resize', resize);
 // ------------------------------------------------------------------ lights
 const sunLight = new THREE.DirectionalLight(0xfff8f0, 3);
 sunLight.castShadow = true;
-sunLight.shadow.mapSize.set(4096, 4096);
+sunLight.shadow.mapSize.set(LOW ? 2048 : 4096, LOW ? 2048 : 4096);
 const SH = { e: 15, n: -5, half: 190 };
 Object.assign(sunLight.shadow.camera, { left: -SH.half, right: SH.half, top: SH.half, bottom: -SH.half, near: 1, far: 3000 });
 sunLight.shadow.bias = -0.0004; sunLight.shadow.normalBias = 0.06;
+sunLight.shadow.autoUpdate = false; // re-rendered only when the Sun or the hardware changes
+let shadowKey = '';
 scene.add(sunLight, sunLight.target);
 const earthLight = new THREE.DirectionalLight(0xc8d8ff, 0);
 scene.add(earthLight, earthLight.target);
@@ -262,6 +265,9 @@ function applyTime(t) {
   M.alsep.visible = t >= Date.parse('1969-11-19T13:34:29Z');
   M.backpacks.visible = t >= DATES.backpacks;
   M.rocks.visible = L.rocks;
+  const key = [sunW.x.toFixed(4), sunW.y.toFixed(4), sunW.z.toFixed(4), L.shadows, L.rocks, M.lm.lm.visible, M.lm.ascent.visible, M.surveyor.camera.visible, M.surveyor.scoop.visible,
+    M.flag.visible, M.dish.group.visible, t >= DATES.dishFalls, M.swc.group.visible, M.alsep.visible, M.backpacks.visible, state.cam].join();
+  if (key !== shadowKey) { shadowKey = key; sunLight.shadow.needsUpdate = true; }
   for (const k of [1, 2]) webcams[k].visible = state.cam !== k && (CAMERAS[k].from == null || t >= CAMERAS[k].from);
   return s;
 }
@@ -290,13 +296,28 @@ function placeCamera() {
 let focusTarget = 40, focusNow = 40, focusVel = 0;
 const ray = new THREE.Raycaster();
 function focusPull() { focusVel += (Math.random() - 0.5) * 30; }
+let focusCount = 0, focusHw = [];
+function terrainDistance(o, dir) {
+  let t = 0.5;
+  while (t < 2500) {
+    const p = o.clone().addScaledVector(dir, t);
+    if (p.y < heightAt(p.x, -p.z)) return t;
+    t *= 1.04; t += 0.2;
+  }
+  return 2500;
+}
 function updateFocus(dt) {
-  ray.setFromCamera(new THREE.Vector2(0, 0), camera);
-  ray.far = 3000;
-  const hits = ray.intersectObjects(scene.children.filter((o) => o.isMesh || o.isGroup), true);
-  let d = 400;
-  for (const h of hits) { if (h.object.visible && h.object.parent?.visible !== false) { d = h.distance; break; } }
-  focusTarget = Math.max(15, Math.min(d, 400));
+  if (focusCount++ % 5 === 0) {
+    ray.setFromCamera(new THREE.Vector2(0, 0), camera);
+    ray.far = 2500;
+    if (!focusHw.length) focusHw = [models.lm.lm, models.surveyor.group, models.flag, models.dish.group, models.alsep, models.backpacks, models.swc.group, webcams[1], webcams[2]];
+    const hits = ray.intersectObjects(focusHw.filter((o) => o.visible), true);
+    let d = terrainDistance(camera.position, ray.ray.direction);
+    const shown = (o) => { for (; o; o = o.parent) if (!o.visible) return false; return true; };
+    for (const h of hits) { if (shown(h.object)) { d = Math.min(d, h.distance); break; } }
+    focusTarget = Math.max(15, Math.min(d, 400));
+  }
+
   // spring with overshoot, like a hunting autofocus
   const err = Math.log(focusTarget) - Math.log(focusNow);
   focusVel += err * 40 * dt; focusVel *= Math.exp(-6 * dt);

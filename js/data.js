@@ -126,12 +126,12 @@ export const OBJECTS = [
 export const JUMPS = [
   { id: 'surveyor', label: '1967: Surveyor 3 alone', t: T('1967-04-24T06:00:00Z'), cam: 1, yaw: 137.5, pitch: -3, fov: 6 },
   { id: 'touchdown', label: '1969: Apollo 12 lands', t: DATES.touchdown + 30e3, cam: 1, yaw: 200, pitch: 1, fov: 40 },
-  { id: 'flag', label: 'Flag up', t: DATES.flagUp + 60e3, cam: 1, yaw: 245, pitch: 4, fov: 30 },
-  { id: 'alsep', label: 'Science station on', t: DATES.alsepData, cam: 1, yaw: 300, pitch: 0, fov: 8 },
+  { id: 'flag', label: 'Flag up', t: DATES.flagUp + 60e3, cam: 1, yaw: 252, pitch: 3, fov: 26 },
+  { id: 'alsep', label: 'Science station on', t: DATES.alsepData, cam: 1, yaw: 307.5, pitch: -0.8, fov: 7 },
   { id: 'visit', label: 'Crew visits Surveyor', t: DATES.atSurveyor + 25 * 60e3, cam: 2, yaw: 311, pitch: 2, fov: 40 },
   { id: 'liftoff', label: 'Liftoff', t: DATES.liftoff + 120e3, cam: 1, yaw: 200, pitch: 8, fov: 45 },
-  { id: 'earth', label: 'Earth in the sky', t: T('1969-11-19T12:00:00Z'), cam: 1, yaw: 88, pitch: 58, fov: 8 },
-  { id: 'off', label: '1977: switched off', t: DATES.alsepOff + 3600e3, cam: 1, yaw: 300, pitch: 0, fov: 10 },
+  { id: 'earth', label: 'Earth in the sky', t: T('1969-11-19T12:00:00Z'), cam: 1, aimEarth: true, fov: 8 },
+  { id: 'off', label: '1977: switched off', t: DATES.alsepOff + 3600e3, cam: 1, yaw: 307.5, pitch: -0.8, fov: 10 },
   { id: 'live', label: 'LIVE', t: null, cam: 1 },
 ];
 
@@ -164,3 +164,27 @@ export const TICKER = [
 // Fixed facts shown by the generator readout
 export const PU238_HALF_LIFE_Y = 87.7;
 export const RTG_HEAT0_W = 1250;
+
+// "Tell me the story": a guided tour. Each step sets a date and a view, then lets time run at `speed`.
+export const TOUR = [
+  { live: true, cam: 1, yaw: 197, pitch: 2, fov: 50, dur: 8,
+    text: 'This is a webcam on the Moon. It is night here right now. The blue-grey light is sunlight bounced off Earth.' },
+  { live: true, cam: 1, aimEarth: true, fov: 14, dur: 6,
+    text: 'There is Earth, high in the sky. From here it never rises or sets.' },
+  { rew: true, t: Date.parse('1967-04-24T06:00:00Z'), cam: 1, yaw: 137.5, pitch: -3, fov: 6, dur: 9, label: 'REWIND 59 YEARS',
+    text: 'April 1967. Nobody has ever been here. A robot called Surveyor 3 has just landed in this crater. It digs the soil and takes 6,315 pictures.' },
+  { t: Date.parse('1969-11-19T06:54:31Z'), cam: 1, yaw: 205, pitch: 2, fov: 42, speed: 1, dur: 9, label: '19 NOVEMBER 1969',
+    text: 'Two and a half years later. Apollo 12 lands, only 160 m from Surveyor. The Sun is just 5 degrees up, so every shadow is long.' },
+  { t: Date.parse('1969-11-19T12:41:20Z'), cam: 1, yaw: 238, pitch: 4, fov: 48, speed: 20, dur: 8,
+    text: 'Pete Conrad and Alan Bean put up the flag and a dish antenna that points at Earth. (We do not show the astronauts: things appear when they set them up.)' },
+  { t: Date.parse('1969-11-19T13:33:40Z'), cam: 1, yaw: 307.5, pitch: -0.8, fov: 7, speed: 120, dur: 9,
+    text: '126 m away they set up a science station. A seismometer will listen for moonquakes. A small nuclear generator will keep it running through the two-week nights.' },
+  { t: Date.parse('1969-11-20T06:47:40Z'), cam: 2, yaw: 311, pitch: -6, fov: 26, speed: 15, dur: 9, label: '20 NOVEMBER 1969 - CAM 2',
+    text: 'Next day they walk down to Surveyor 3. Watch closely: they cut off its TV camera and its scoop, to find out what 31 months on the Moon did to them.' },
+  { t: Date.parse('1969-11-20T14:25:30Z'), cam: 1, yaw: 200, pitch: 6, fov: 45, speed: 2, dur: 8,
+    text: 'Liftoff. The top half of the lunar module flies back to orbit. The bottom half stays behind as a launch pad. The dish was blown over by a thruster test.' },
+  { t: Date.parse('1977-09-30T12:00:00Z'), cam: 1, yaw: 307.5, pitch: -0.8, fov: 7, dur: 7, label: '30 SEPTEMBER 1977',
+    text: 'For almost eight years the science station sends data to Earth. Then it is switched off.' },
+  { ff: true, live: true, cam: 1, yaw: 197, pitch: 2, fov: 50, dur: 10, label: 'BACK TO LIVE',
+    text: 'Today. Everything is still here, abandoned but not forgotten. Except one thing. There is no camera. (Read "info" to find out how this picture is made.)' },
+];

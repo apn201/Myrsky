@@ -5,7 +5,7 @@ import { skyState, sunCovered, eqjFromRaDec, SITE } from './sky.js';
 import { loadTerrain, heightTexture, buildTerrainMesh, buildWideMesh, terrainMaterial, heightAt, lineOfSight } from './terrain.js';
 import { loadLM, buildSurveyor, buildFlag, buildDish, buildSWC, buildALSEP, buildBackpacks, buildWebcam, buildRocks, w } from './models.js';
 import { createPost } from './post.js';
-import { DATES, POS, CAMERAS, OBJECTS, JUMPS, TICKER, PU238_HALF_LIFE_Y, RTG_HEAT0_W } from './data.js';
+import { DATES, POS, CAMERAS, OBJECTS, JUMPS, TICKER, TOUR, PU238_HALF_LIFE_Y, RTG_HEAT0_W } from './data.js';
 
 const D2R = Math.PI / 180;
 const $ = (id) => document.getElementById(id);
@@ -41,6 +41,7 @@ function readURL() {
   if (qs.get('cam')) setCam(+qs.get('cam') === 2 ? 2 : 1, true);
   for (const k of ['yaw', 'pitch', 'fov']) if (qs.get(k)) state[k] = +qs.get(k);
   if (qs.get('layers')) for (const p of qs.get('layers').split(',')) { const on = !p.startsWith('-'); state.layers[p.replace(/^[-+]/, '')] = on; }
+  if (qs.has('story')) setTimeout(startTour, 300);
   if (qs.get('jump')) { const j = JUMPS.find((x) => x.id === qs.get('jump')); if (j) jump(j); }
 }
 function shareURL() {
@@ -183,7 +184,16 @@ function applyTime(t) {
   const physSun = L.sun ? 3.2 * sunVis : 0;
   const physEarth = L.earthlight ? 3.2 * 8.4e-5 * s.earthLit * THREE.MathUtils.smoothstep(s.earthAzEl.el, -1, 2) : 0;
   // auto exposure: aim for a mid-grey Moon whatever the light
-  const target = L.exposure ? 0.55 / (0.16 * (physSun + physEarth) + 2e-7) : 1.15;
+  let target = L.exposure ? 0.55 / (0.16 * (physSun + physEarth) + 2e-7) : 1.15;
+  // centre-weighted metering: when Earth fills the middle of the frame, expose for Earth instead
+  if (L.exposure && L.earth) {
+    const cd = camera.getWorldDirection(new THREE.Vector3());
+    const off = Math.acos(Math.min(1, cd.dot(earthW))) / D2R;
+    const share = (s.earthAngularRadius / D2R) * 2 / state.fov;
+    const wE = THREE.MathUtils.clamp((share - 0.04) * 8, 0, 1) * (1 - THREE.MathUtils.smoothstep(off, state.fov * 0.15, state.fov * 0.4));
+    const earthTarget = 0.55 / (3.2 * 0.3 * 0.6 * Math.max(0.15, s.earthLit));
+    target = Math.exp(Math.log(target) * (1 - wE) + Math.log(earthTarget) * wE);
+  }
   const k = Math.min(1, frameDt * (Math.abs(state.speed) > 600 ? 8 : 2.5));
   gainS = gainS ? Math.exp(Math.log(gainS) + (Math.log(target) - Math.log(gainS)) * k) : target;
   const S = Math.min(gainS, 2e5);
@@ -297,16 +307,61 @@ function bindHold(btn, dir) {
   btn.addEventListener('pointerdown', start);
   btn.addEventListener('pointerup', end); btn.addEventListener('pointerleave', end); btn.addEventListener('pointercancel', end);
 }
+function aimAtEarth(o, t) {
+  const sk = skyState(new Date(t));
+  o.yaw = sk.earthAzEl.az; o.pitch = Math.min(80, sk.earthAzEl.el);
+}
 function jump(j) {
+  if (j.aimEarth) aimAtEarth(j, j.t ?? Date.now());
   if (j.t == null) { state.live = true; state.speed = 0; setCam(j.cam || 1); return; }
   state.live = false; state.speed = 0; state.t = j.t;
   setCam(j.cam);
   if (j.yaw != null) { state.yaw = j.yaw; state.pitch = j.pitch; state.fov = j.fov; }
 }
+// ---- guided story
+let tour = null, glide = null;
+function glideTo(yaw, pitch, fov, dur = 1.6) {
+  let dy = ((yaw - state.yaw + 540) % 360) - 180;
+  glide = { y0: state.yaw, dy, p0: state.pitch, p1: pitch, f0: state.fov, f1: fov, t0: performance.now(), dur: dur * 1000 };
+}
+function runGlide(now) {
+  if (!glide) return;
+  const k = Math.min(1, (now - glide.t0) / glide.dur), e = k * k * (3 - 2 * k);
+  state.yaw = glide.y0 + glide.dy * e; state.pitch = glide.p0 + (glide.p1 - glide.p0) * e;
+  state.fov = Math.exp(Math.log(glide.f0) + (Math.log(glide.f1) - Math.log(glide.f0)) * e);
+  if (k >= 1) glide = null;
+}
+function tourStep(i) {
+  if (!tour) return;
+  if (i >= TOUR.length) return stopTour();
+  tour.i = i;
+  const s = TOUR[i];
+  const show = () => {
+    if (s.aimEarth) aimAtEarth(s, s.live ? Date.now() : s.t);
+    $('caption').innerHTML = (s.label ? `<small>${s.label}</small>` : '') + s.text; $('caption').hidden = false;
+    if (state.cam !== s.cam) { setCam(s.cam, true); state.yaw = s.yaw; state.pitch = s.pitch; state.fov = s.fov; }
+    else glideTo(s.yaw, s.pitch, s.fov, i === 0 ? 0.01 : 1.8);
+    if (s.live) { state.live = true; state.speed = 0; } else { state.live = false; state.t = s.t; state.speed = s.speed || 0; }
+    tour.timer = setTimeout(() => tourStep(i + 1), s.dur * 1000);
+  };
+  if (s.rew || s.ff) { // a visible high-speed run through the years first
+    state.live = false; state.speed = s.rew ? -6e8 : 6e8;
+    $('caption').innerHTML = `<small>${s.rew ? '&#9664;&#9664; REWINDING' : '&#9654;&#9654; FAST FORWARD'}</small>`;
+    tour.timer = setTimeout(show, 2600);
+  } else show();
+}
+function startTour() { stopTour(); tour = { i: 0 }; $('story').classList.add('on'); $('story').innerHTML = '&#9632; Stop the story'; tourStep(0); }
+function stopTour() {
+  if (tour) clearTimeout(tour.timer);
+  tour = null; glide = null; $('caption').hidden = true; $('story').classList.remove('on'); $('story').innerHTML = '&#9654; Tell me the story (2 min)';
+}
 window.oosJump = (id) => { const j = JUMPS.find((x) => x.id === id); if (j) jump(j); };
 
 function buildUI() {
   bindHold($('rew'), -1); bindHold($('ff'), 1);
+  $('story').onclick = () => (tour ? stopTour() : startTour());
+  document.querySelector('.controls').addEventListener('pointerdown', () => tour && stopTour(), true);
+  $('jumps').addEventListener('click', () => tour && stopTour(), true);
   $('play').onclick = () => { state.live = false; state.speed = state.speed === 1 ? 0 : 1; };
   $('pause').onclick = () => { state.live = false; state.speed = 0; };
   $('live').onclick = () => { state.live = true; state.speed = 0; };
@@ -338,7 +393,7 @@ function buildUI() {
   }
   // drag to look
   let drag = null;
-  view.addEventListener('pointerdown', (e) => { if (e.target.closest('.label') ) return; drag = { x: e.clientX, y: e.clientY }; view.setPointerCapture(e.pointerId); });
+  view.addEventListener('pointerdown', (e) => { if (e.target.closest('.label') ) return; if (tour) stopTour(); drag = { x: e.clientX, y: e.clientY }; view.setPointerCapture(e.pointerId); });
   view.addEventListener('pointermove', (e) => {
     if (!drag) return; const h = view.clientHeight;
     state.yaw -= (e.clientX - drag.x) / h * state.fov; state.pitch += (e.clientY - drag.y) / h * state.fov;
@@ -433,6 +488,7 @@ function loop(now) {
   else if (state.speed) state.t += state.speed * dt * 1000;
   if (state.t < DATES.rangeStart) { state.t = DATES.rangeStart; state.speed = 0; }
   if (state.t > Date.now()) { state.t = Date.now(); state.live = true; state.speed = 0; hold = null; }
+  runGlide(now);
   placeCamera();
   const s = applyTime(state.t);
   updateFocus(dt);

@@ -45,7 +45,15 @@ input[type=datetime-local] { font: 13px Arial, sans-serif; }
 #sheetClose { float: right; }
 @media (max-width: 760px) {
   body { margin: 4px; font-size: 16px; }
-  .lower, .lower tr, .lower td { display: block; width: 100% !important; }
+  .lower { width: 100% !important; }
+  .lower, .lower tbody, .lower tr, .lower td { display: block; width: auto !important; }
+  .lower td { padding: 0 4px; }
+  #caption { font-size: 15px; padding: 6px 8px; }
   .controls td { display: block; }
   #osd { font-size: 12px; }
 }
+
+#caption { position: absolute; left: 50%; bottom: 34px; transform: translateX(-50%); width: min(90%, 760px); background: rgba(0,0,0,.72); color: #fff; border: 1px solid #ffd700; padding: 8px 14px; font: 20px/1.35 "Times New Roman", serif; text-align: center; pointer-events: none; }
+#caption small { display: block; color: #ffd700; font: 13px "Courier New", monospace; margin-bottom: 3px; }
+#story { font: bold 15px Arial, sans-serif; background: #ffd700; border-color: #fff3a0; padding: 5px 12px; }
+#story.on { background: #c9a800; }

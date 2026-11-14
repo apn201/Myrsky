@@ -83,7 +83,7 @@ export async function loadLM() {
   const env = groundEnv();
   const foilN = foilNormalMap();
   const foil = triplanar(new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.85, roughness: 0.32, envMap: env, normalMap: foilN, normalScale: new THREE.Vector2(0.9, 0.9), side: THREE.DoubleSide }), tFoil, 0.8, 1.3);
-  const panel = triplanar(new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.35, roughness: 0.5, envMap: env, side: THREE.DoubleSide }), tPanel, 1.1, 0.75);
+  const panel = triplanar(new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.35, roughness: 0.5, envMap: env, side: THREE.DoubleSide }), tPanel, 1.1, 0.45);
   const black = new THREE.MeshStandardMaterial({ color: 0x141414, metalness: 0.3, roughness: 0.45, envMap: env, side: THREE.DoubleSide });
   const grey = new THREE.MeshStandardMaterial({ color: 0x5a5a5a, metalness: 0.6, roughness: 0.4, envMap: env, side: THREE.DoubleSide });
   const root = gltf.scene;
@@ -200,7 +200,7 @@ export function buildFlag() {
     p.setXYZ(i, x, y - droopTop - Math.pow(x / 1.52, 2) * 0.03, ripple);
   }
   geo.computeVertexNormals();
-  const cloth = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: flagTexture(), roughness: 0.85, side: THREE.DoubleSide }));
+  const cloth = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: flagTexture(), color: 0x8c8c8c, roughness: 0.9, side: THREE.DoubleSide })); // nylon, dulled by dust
   cloth.position.set(0.02, poleH - 0.04 - 0.455, 0); g.add(cloth);
   g.position.copy(ground('flag', -0.3));
   g.rotation.y = 120 * D2R; // front of the cloth toward CAM 1 (real orientation approximate)
@@ -211,7 +211,7 @@ export function buildDish() {
   const g = new THREE.Group();
   const metal = std(0xcfcfcf, 0.45, 0.7);
   // erectable S-band dish: white-pink fabric on 16 dark ribs (crew photo AS12-46-6739)
-  const fabric = new THREE.MeshStandardMaterial({ color: 0xd9a888, roughness: 0.75, metalness: 0.0, side: THREE.DoubleSide, transparent: true, opacity: 0.9 }); // salmon fabric, AS12-47-6988
+  const fabric = new THREE.MeshStandardMaterial({ color: 0xa98670, roughness: 0.85, metalness: 0.0, side: THREE.DoubleSide, transparent: true, opacity: 0.9 }); // salmon fabric, AS12-47-6988
   const ribMat = std(0x3a3632, 0.6, 0.3);
   const upright = new THREE.Group();
   for (let i = 0; i < 3; i++) { const a = i * 2.094; upright.add(rod(new THREE.Vector3(Math.cos(a) * 0.9, 0, Math.sin(a) * 0.9), new THREE.Vector3(0, 1.8, 0), 0.015, metal)); }
@@ -255,7 +255,7 @@ export function buildSWC() {
 
 export function buildALSEP() {
   const g = new THREE.Group();
-  const gold = std(0xb8913a, 0.45, 0.7), silver = std(0xd8d8d8, 0.35, 0.8), white = std(0xe8e8e2, 0.6), dark = std(0x2a2a2a, 0.6, 0.3);
+  const gold = std(0xb8913a, 0.45, 0.7), silver = std(0xd8d8d8, 0.35, 0.8), white = std(0xb8b8b2, 0.6), dark = std(0x2a2a2a, 0.6, 0.3);
   const place = (id, obj, du = 0) => { obj.position.copy(ground(id, du)); g.add(obj); return obj; };
   // central station: base box, raised sunshield, helical antenna on a mast
   const cs = new THREE.Group();
@@ -334,7 +334,7 @@ export function buildRocks(centres, seed = 1) {
     }
     g.computeVertexNormals(); geos.push(g);
   }
-  const mat = new THREE.MeshStandardMaterial({ color: 0x6b6762, roughness: 0.95, flatShading: true }); // basalt, a bit brighter than the soil
+  const mat = new THREE.MeshStandardMaterial({ color: 0x5a5652, roughness: 0.95, flatShading: true }); // basalt, a bit brighter than the soil
   const group = new THREE.Group();
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), p3 = new THREE.Vector3();
   const lists = geos.map(() => []);
@@ -347,7 +347,7 @@ export function buildRocks(centres, seed = 1) {
       const e = c.e + Math.cos(a) * rr, n = c.n + Math.sin(a) * rr;
       if (c.avoid && c.avoid.some(([ae, an, ar]) => Math.hypot(e - ae, n - an) < ar)) continue;
       const size = 0.06 * Math.pow(rnd(), -1 / 2.56) / 2; // radius m, inverse-CDF of the power law
-      const r = Math.min(size, 0.6);
+      const r = Math.min(size, 0.35);
       const bury = 0.35 + 0.3 * rnd();
       p3.set(e, heightAt(e, n) - r * bury * 0.75, -n);
       q.setFromEuler(new THREE.Euler(rnd() * 0.5, rnd() * 6.28, rnd() * 0.5));

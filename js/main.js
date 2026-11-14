@@ -40,7 +40,7 @@ state.layers.markers = false;
 
 function readURL() {
   if (qs.get('t')) { const t = Date.parse(qs.get('t')); if (!isNaN(t)) { state.t = t; state.live = false; } }
-  if (qs.get('cam')) setCam(+qs.get('cam') === 2 ? 2 : 1, true);
+  if (qs.get('cam')) setCam(+qs.get('cam') === 2 ? 2 : 1, !!qs.get('yaw'));
   for (const k of ['yaw', 'pitch', 'fov']) if (qs.get(k)) state[k] = +qs.get(k);
   if (qs.get('layers')) for (const p of qs.get('layers').split(',')) { const on = !p.startsWith('-'); state.layers[p.replace(/^[-+]/, '')] = on; }
   if (qs.has('story')) setTimeout(startTour, 300);
@@ -195,7 +195,7 @@ function applyTime(t) {
   sunLight.color.setRGB(1, 1 - 0.55 * cover, 1 - 0.72 * cover);
   const physEarth = L.earthlight ? 3.2 * 8.4e-5 * s.earthLit * THREE.MathUtils.smoothstep(s.earthAzEl.el, -1, 2) : 0;
   // auto exposure: aim for a mid-grey Moon whatever the light
-  const EXPK = 4.2; // auto exposure constant: sunlit mare at mid-grey
+  const EXPK = 6.5; // auto exposure constant: sunlit mare at mid-grey
   let target = L.exposure ? EXPK / (physSun + physEarth + 2e-7) : EXPK / 3.2;
   // centre-weighted metering: when Earth fills the middle of the frame, expose for Earth instead
   if (L.exposure && L.earth) {
@@ -305,6 +305,12 @@ function placeCamera() {
   const c = CAMERAS[state.cam];
   state.pitch = THREE.MathUtils.clamp(state.pitch, -20, 85);
   state.fov = THREE.MathUtils.clamp(state.fov, 2, 70);
+  // the camera cannot zoom in on the lander: at this distance the model would show
+  if (state.cam === 1 && state.t >= DATES.touchdown) {
+    const lmBrg = Math.atan2(-c.pos[0], -c.pos[1]) / D2R;
+    const off = Math.abs(((state.yaw - lmBrg + 540) % 360) - 180);
+    if (off < state.fov / 2 + 8) state.fov = Math.max(state.fov, 28);
+  }
   state.yaw = ((state.yaw % 360) + 360) % 360;
   camera.position.copy(w(c.pos[0], c.pos[1], heightAt(...c.pos) + c.h));
   const y = state.yaw * D2R, p = state.pitch * D2R;
@@ -341,7 +347,7 @@ function updateFocus(dt) {
 
   // spring with overshoot, like a hunting autofocus
   const err = Math.log(focusTarget) - Math.log(focusNow);
-  focusVel += err * 40 * dt; focusVel *= Math.exp(-6 * dt);
+  focusVel += err * 6 * dt; focusVel *= Math.exp(-4 * dt);
   focusNow = Math.exp(Math.log(focusNow) + focusVel * dt);
   post.uniforms.focus.value = focusNow;
   post.uniforms.aperture.value = (50 / state.fov) ** 0.8;
@@ -527,12 +533,12 @@ function openSheet(id) {
 }
 window.oosSheet = openSheet;
 // dev only: save the current frame through tools/devserver.py
-window.oosState = state; window.oosSetCam = setCam;
+window.oosState = state; window.oosCams = CAMERAS; window.oosSetCam = setCam;
 window.oosViews = {
-  flag: { t: '1969-11-19T12:45:00Z', cam: 1, yaw: 236, pitch: 3, fov: 50 }, upsun: { t: '1969-11-19T12:45:00Z', cam: 1, yaw: 100, pitch: -2, fov: 60 },
-  downsun: { t: '1969-11-19T12:45:00Z', cam: 1, yaw: 280, pitch: -2, fov: 60 }, lm: { t: '1969-11-19T12:45:00Z', cam: 1, yaw: 207, pitch: 2, fov: 22 },
-  surveyor67: { t: '1967-04-24T06:00:00Z', cam: 1, yaw: 137.5, pitch: -3, fov: 6 }, cam2: { t: '1969-11-20T06:45:00Z', cam: 2, yaw: 311, pitch: 1, fov: 45 },
-  night: { live: true, cam: 1, yaw: 197, pitch: 2, fov: 50 }, touchdown: { t: '1969-11-19T06:56:00Z', cam: 1, yaw: 205, pitch: 2, fov: 42 },
+  flag: { t: '1969-11-19T12:45:00Z', cam: 1, yaw: 214, pitch: 0, fov: 34 }, upsun: { t: '1969-11-19T12:45:00Z', cam: 1, yaw: 100, pitch: -2, fov: 60 },
+  downsun: { t: '1969-11-19T12:45:00Z', cam: 1, yaw: 280, pitch: -2, fov: 60 }, lm: { t: '1969-11-19T12:45:00Z', cam: 1, yaw: 207, pitch: 0, fov: 22 },
+  surveyor67: { t: '1967-04-24T06:00:00Z', cam: 1, yaw: 145.6, pitch: -3.3, fov: 6 }, cam2: { t: '1969-11-20T06:45:00Z', cam: 2, yaw: 311, pitch: 1, fov: 45 },
+  night: { live: true, cam: 1, yaw: 212, pitch: -1, fov: 40 }, touchdown: { t: '1969-11-19T06:56:00Z', cam: 1, yaw: 210, pitch: 0, fov: 36 },
 };
 window.oosShoot = async (names, prefix = '') => {
   for (const n of names) {
@@ -542,11 +548,12 @@ window.oosShoot = async (names, prefix = '') => {
   }
   return 'done';
 };
-window.oosShot = (name) => { post.render(scene, camera); const u = canvas.toDataURL('image/jpeg', 0.92); return fetch('/__shot?name=' + encodeURIComponent(name), { method: 'POST', body: u }).then((r) => r.status); };
+window.oosShot = (name) => { for (let i = 0; i < 4; i++) post.render(scene, camera, performance.now(), true); const u = canvas.toDataURL('image/jpeg', 0.92); return fetch('/__shot?name=' + encodeURIComponent(name), { method: 'POST', body: u }).then((r) => r.status); };
 
 function tickerText(t) { const x = TICKER.find((k) => t >= k.from && t < k.to); return x ? x.text : ''; }
 
 // ------------------------------------------------------------------ loop
+let burstT = 0;
 let last = performance.now(), lastTick = '', glitchT = 0, frame = 0, fpsAcc = 0, fps = 0;
 function loop(now) {
   requestAnimationFrame(loop);
@@ -570,13 +577,16 @@ function loop(now) {
   post.uniforms.dof.value = L.dof ? 1 : 0;
   post.uniforms.time.value = now / 1000;
   // rare transmission errors
-  if (webcamOn && Math.random() < dt * 0.04) { glitchT = 0.12 + Math.random() * 0.2; post.uniforms.glitchY.value = Math.random(); }
+  // rare imperfections: a torn band every minute or so, a burst of static every few minutes
+  if (webcamOn && Math.random() < dt / 50) { glitchT = 0.15 + Math.random() * 0.25; post.uniforms.glitchY.value = Math.random(); }
   glitchT = Math.max(0, glitchT - dt); post.uniforms.glitch.value = glitchT > 0 ? 1 : 0;
+  if (webcamOn && Math.random() < dt / 150) burstT = 0.2 + Math.random() * 0.5;
+  burstT = Math.max(0, burstT - dt); post.uniforms.burst.value = burstT > 0 ? Math.min(1, burstT * 4) : 0;
   // CAM 2 has no signal before it "exists"
   const camOK = CAMERAS[state.cam].from == null || state.t >= CAMERAS[state.cam].from;
   post.uniforms.signal.value = camOK ? 1 : 0;
   $('nosignal').hidden = camOK;
-  post.render(scene, camera);
+  post.render(scene, camera, now);
   updateLabels();
   // overlay text
   const mode = state.live ? '<span class="rec">&#9679;</span> LIVE' : state.speed ? (state.speed < 0 ? '&#9664;&#9664; REW ' : '&#9654;&#9654; FF ') + speedLabel(state.speed) : 'PAUSED';

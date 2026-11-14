@@ -36,8 +36,8 @@ export const POS = {
 };
 
 export const CAMERAS = {
-  1: { name: 'CAM 1', pos: [8.6, 17.1], h: 1.45, yaw: 197, pitch: -2, fov: 50,
-       note: 'Stands where the real Apollo 12 TV camera was left after it burned out (19 m NNE of the lander).' },
+  1: { name: 'CAM 1', pos: [20, 40], h: 1.45, yaw: 212, pitch: -1, fov: 40,
+       note: 'Stands 45 m north-north-east of the lander, looking back at it, the dish and the flag.' },
   2: { name: 'CAM 2', pos: [128.7, -112.3], h: 1.45, yaw: 311, pitch: 3, fov: 45, from: DATES.touchdown,
        note: 'On the inner slope of Surveyor crater, 14 m beyond Surveyor 3, looking back up at the lander on the rim.' },
 };
@@ -115,7 +115,7 @@ export const OBJECTS = [
     ],
     facts: [['Thrown out', '20 Nov 1969, 09:07 UTC']], src: 'Apollo Lunar Surface Journal (launch chapter)' },
   { id: 'cam1', name: 'CAM 1', kind: 'INVENTED', from: null, to: null,
-    lines: ['This camera does not exist. Nobody left a webcam on the Moon.', 'It stands where the real Apollo 12 TV camera was left after it burned out by pointing at the Sun. That camera went home.'],
+    lines: ['This camera does not exist. Nobody left a webcam on the Moon.', 'It stands 45 m north-north-east of the lander. Between it and the lander is the spot where the real Apollo 12 TV camera was left after it burned out by pointing at the Sun. That camera went home.'],
     facts: [], src: 'invented. See info page.' },
   { id: 'cam2', name: 'CAM 2', kind: 'INVENTED', from: DATES.touchdown, to: null,
     lines: ['This camera does not exist either.', 'It stands in Surveyor crater so you can see Surveyor 3 with the lander on the rim behind it, like in the crew\'s own photos.'],
@@ -124,15 +124,15 @@ export const OBJECTS = [
 
 // One list drives the jump links, the info page links and the ticker. Times are UTC.
 export const JUMPS = [
-  { id: 'surveyor', label: '1967: Surveyor 3 alone', t: T('1967-04-24T06:00:00Z'), cam: 1, yaw: 137.5, pitch: -3, fov: 6 },
+  { id: 'surveyor', label: '1967: Surveyor 3 alone', t: T('1967-04-24T06:00:00Z'), cam: 1, yaw: 145.6, pitch: -3.3, fov: 6 },
   { id: 'eclipse', label: '1967: Earth eclipses the Sun', t: T('1967-04-24T12:06:26Z'), cam: 1, aimEarth: true, fov: 7 },
-  { id: 'touchdown', label: '1969: Apollo 12 lands', t: DATES.touchdown + 30e3, cam: 1, yaw: 200, pitch: 1, fov: 40 },
-  { id: 'flag', label: 'Flag up', t: DATES.flagUp + 60e3, cam: 1, yaw: 252, pitch: 3, fov: 26 },
-  { id: 'alsep', label: 'Science station on', t: DATES.alsepData, cam: 1, yaw: 307.5, pitch: -0.8, fov: 7 },
+  { id: 'touchdown', label: '1969: Apollo 12 lands', t: DATES.touchdown + 30e3, cam: 1, yaw: 210, pitch: 0, fov: 36 },
+  { id: 'flag', label: 'Flag up', t: DATES.flagUp + 60e3, cam: 1, yaw: 216, pitch: 0, fov: 30 },
+  { id: 'alsep', label: 'Science station on', t: DATES.alsepData, cam: 1, yaw: 295.3, pitch: -0.8, fov: 7 },
   { id: 'visit', label: 'Crew visits Surveyor', t: DATES.atSurveyor + 25 * 60e3, cam: 2, yaw: 311, pitch: 2, fov: 40 },
-  { id: 'liftoff', label: 'Liftoff', t: DATES.liftoff + 120e3, cam: 1, yaw: 200, pitch: 8, fov: 45 },
+  { id: 'liftoff', label: 'Liftoff', t: DATES.liftoff + 120e3, cam: 1, yaw: 210, pitch: 3, fov: 38 },
   { id: 'earth', label: 'Earth in the sky', t: T('1969-11-19T12:00:00Z'), cam: 1, aimEarth: true, fov: 8 },
-  { id: 'off', label: '1977: switched off', t: DATES.alsepOff + 3600e3, cam: 1, yaw: 307.5, pitch: -0.8, fov: 10 },
+  { id: 'off', label: '1977: switched off', t: DATES.alsepOff + 3600e3, cam: 1, yaw: 295.3, pitch: -0.8, fov: 10 },
   { id: 'live', label: 'LIVE', t: null, cam: 1 },
 ];
 
@@ -146,7 +146,7 @@ export const TICKER = [
   { from: DATES.launch, to: DATES.touchdown, text: 'Apollo 12 is on its way. Lightning hit the rocket twice during launch, 36 and 52 seconds after liftoff.' },
   { from: DATES.touchdown, to: DATES.firstStep, text: '06:54 UTC - Intrepid has landed, about 160 m from Surveyor 3. The Sun is only 5 degrees up.' },
   { from: DATES.firstStep, to: T('1969-11-19T12:21:00Z'), text: 'First moonwalk. Crew not shown: objects appear at the moment the crew set them up.' },
-  { from: T('1969-11-19T12:20:41Z'), to: DATES.flagUp, text: '12:20 UTC - The TV camera is pointed at the Sun by mistake and burns out. Viewers on Earth see nothing more. (CAM 1 stands where it was left.)' },
+  { from: T('1969-11-19T12:20:41Z'), to: DATES.flagUp, text: '12:20 UTC - The TV camera is pointed at the Sun by mistake and burns out. Viewers on Earth see nothing more. (It was left between CAM 1 and the lander.)' },
   { from: DATES.flagUp, to: T('1969-11-19T13:34:00Z'), text: '12:41 UTC - Flag up. The crossbar latch failed, so it hangs with ripples.' },
   { from: T('1969-11-19T13:34:00Z'), to: DATES.eva1End, text: 'The science station is being set up 126 m to the north-west. 14:21 UTC: "We\'re getting data back."' },
   { from: DATES.eva1End, to: DATES.eva2Start, text: 'The crew rests inside Intrepid. The seismometer listens.' },
@@ -169,24 +169,24 @@ export const RTG_HEAT0_W = 1250;
 
 // "Tell me the story": a guided tour. Each step sets a date and a view, then lets time run at `speed`.
 export const TOUR = [
-  { live: true, cam: 1, yaw: 197, pitch: 2, fov: 50, dur: 8,
+  { live: true, cam: 1, yaw: 212, pitch: -1, fov: 40, dur: 8,
     text: 'This is a webcam on the Moon. It is night here right now. The blue-grey light is sunlight bounced off Earth.' },
   { live: true, cam: 1, aimEarth: true, fov: 14, dur: 6,
     text: 'There is Earth, high in the sky. From here it never rises or sets.' },
-  { rew: true, t: Date.parse('1967-04-24T06:00:00Z'), cam: 1, yaw: 137.5, pitch: -3, fov: 6, dur: 9, label: 'REWIND 59 YEARS',
+  { rew: true, t: Date.parse('1967-04-24T06:00:00Z'), cam: 1, yaw: 145.6, pitch: -3.3, fov: 6, dur: 9, label: 'REWIND 59 YEARS',
     text: 'April 1967. Nobody has ever been here. A robot called Surveyor 3 has just landed in this crater. It digs the soil and takes 6,315 pictures.' },
-  { t: Date.parse('1969-11-19T06:54:31Z'), cam: 1, yaw: 205, pitch: 2, fov: 42, speed: 1, dur: 9, label: '19 NOVEMBER 1969',
+  { t: Date.parse('1969-11-19T06:54:31Z'), cam: 1, yaw: 210, pitch: 0, fov: 36, speed: 1, dur: 9, label: '19 NOVEMBER 1969',
     text: 'Two and a half years later. Apollo 12 lands, only 160 m from Surveyor. The Sun is just 5 degrees up, so every shadow is long.' },
-  { t: Date.parse('1969-11-19T12:41:20Z'), cam: 1, yaw: 238, pitch: 4, fov: 48, speed: 20, dur: 8,
+  { t: Date.parse('1969-11-19T12:41:20Z'), cam: 1, yaw: 216, pitch: 0, fov: 32, speed: 20, dur: 8,
     text: 'Pete Conrad and Alan Bean put up the flag and a dish antenna that points at Earth. (We do not show the astronauts: things appear when they set them up.)' },
-  { t: Date.parse('1969-11-19T13:33:40Z'), cam: 1, yaw: 307.5, pitch: -0.8, fov: 7, speed: 120, dur: 9,
+  { t: Date.parse('1969-11-19T13:33:40Z'), cam: 1, yaw: 295.3, pitch: -0.8, fov: 7, speed: 120, dur: 9,
     text: '126 m away they set up a science station. A seismometer will listen for moonquakes. A small nuclear generator will keep it running through the two-week nights.' },
   { t: Date.parse('1969-11-20T06:47:40Z'), cam: 2, yaw: 311, pitch: -6, fov: 26, speed: 15, dur: 9, label: '20 NOVEMBER 1969 - CAM 2',
     text: 'Next day they walk down to Surveyor 3. Watch closely: they cut off its TV camera and its scoop, to find out what 31 months on the Moon did to them.' },
-  { t: Date.parse('1969-11-20T14:25:30Z'), cam: 1, yaw: 200, pitch: 6, fov: 45, speed: 2, dur: 8,
+  { t: Date.parse('1969-11-20T14:25:30Z'), cam: 1, yaw: 210, pitch: 3, fov: 38, speed: 2, dur: 8,
     text: 'Liftoff. The top half of the lunar module flies back to orbit. The bottom half stays behind as a launch pad. The dish was blown over by a thruster test.' },
-  { t: Date.parse('1977-09-30T12:00:00Z'), cam: 1, yaw: 307.5, pitch: -0.8, fov: 7, dur: 7, label: '30 SEPTEMBER 1977',
+  { t: Date.parse('1977-09-30T12:00:00Z'), cam: 1, yaw: 295.3, pitch: -0.8, fov: 7, dur: 7, label: '30 SEPTEMBER 1977',
     text: 'For almost eight years the science station sends data to Earth. Then it is switched off.' },
-  { ff: true, live: true, cam: 1, yaw: 197, pitch: 2, fov: 50, dur: 10, label: 'BACK TO LIVE',
+  { ff: true, live: true, cam: 1, yaw: 212, pitch: -1, fov: 40, dur: 10, label: 'BACK TO LIVE',
     text: 'Today. Everything is still here, abandoned but not forgotten. Except one thing. There is no camera. (Read "info" to find out how this picture is made.)' },
 ];

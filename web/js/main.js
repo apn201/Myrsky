@@ -146,7 +146,7 @@ function glowTexture() {
 }
 
 // ------------------------------------------------------------------ world
-let terrainMat, models = {}, webcams = {};
+let terrainMat, wideMat, models = {}, webcams = {};
 const enuToWorld = (v) => new THREE.Vector3(v[0], v[2], -v[1]);
 
 async function buildWorld(progress) {
@@ -158,7 +158,8 @@ async function buildWorld(progress) {
   earthMat.uniforms.map.value = tEarth;
   terrainMat = terrainMaterial(tNear, tWide, heightTexture());
   scene.add(buildTerrainMesh(terrainMat));
-  scene.add(buildWideMesh(terrainMat));
+  wideMat = terrainMaterial(tNear, tWide, terrainMat.userData.uniforms.tHeight.value, true);
+  scene.add(buildWideMesh(wideMat));
   progress('hardware');
   const lm = await loadLM();
   scene.add(lm.lm, lm.photo); models.lm = lm;
@@ -222,6 +223,7 @@ function applyTime(t) {
   models.lm.setEnv((physSun * Math.max(0, s.sun[2]) + physEarth * Math.max(0, s.earth[2])) * 0.11 / Math.PI * S * 2.6); // env ground is 0.5 linear; x1.3 for the lunar photometric brightening
   ambient.intensity = physSun * Math.max(0, s.sun[2]) * 0.11 * 0.03 * S; // light scattered from distant slopes into shadows
   earthLight.position.copy(camPos).addScaledVector(earthW, 1000); earthLight.target.position.copy(camPos);
+  for (const tm of [terrainMat, wideMat]) { tm.userData.uniforms.sunDirW.value.copy(sunW); tm.userData.uniforms.camPos.value.copy(camPos); }
   terrainMat.userData.uniforms.sunDirW.value.copy(sunW);
   terrainMat.userData.uniforms.camPos.value.copy(camPos);
   terrainMat.userData.uniforms.hfOn.value = L.shadows ? 1 : 0;

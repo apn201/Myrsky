@@ -120,12 +120,12 @@ export function buildWideMesh(material) {
 
 // MeshStandardMaterial with: LROC albedo (near 0.5 m, wide 1 m), fine procedural regolith,
 // and a terrain self-shadow found by marching the height map toward the Sun.
-export function terrainMaterial(texNear, texWide, heightTex) {
+export function terrainMaterial(texNear, texWide, heightTex, wideCut = false) {
   const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, metalness: 0 });
   mat.userData.uniforms = {
     tNear: { value: texNear }, tWide: { value: texWide }, tHeight: { value: heightTex },
     sunDirW: { value: new THREE.Vector3(0, 1, 0) }, camPos: { value: new THREE.Vector3() },
-    hfOn: { value: 1 }, detailOn: { value: 1 }, albedoGain: { value: 0.11 },
+    hfOn: { value: 1 }, detailOn: { value: 1 }, albedoGain: { value: 0.11 }, wideCut: { value: wideCut ? 1 : 0 },
   };
   mat.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, mat.userData.uniforms);
@@ -136,7 +136,7 @@ export function terrainMaterial(texNear, texWide, heightTex) {
       .replace('#include <common>', `#include <common>
 varying vec2 vEN; varying vec3 vW;
 uniform sampler2D tNear; uniform sampler2D tWide; uniform sampler2D tHeight;
-uniform vec3 sunDirW; uniform vec3 camPos; uniform float hfOn; uniform float detailOn; uniform float albedoGain;
+uniform vec3 sunDirW; uniform vec3 camPos; uniform float hfOn; uniform float detailOn; uniform float albedoGain; uniform float wideCut;
 float hfShadow = 1.0;
 const vec2 GC = vec2(${G.e.toFixed(1)}, ${G.n.toFixed(1)});
 float hash12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
@@ -172,6 +172,8 @@ float albedoAt(vec2 en){
   return mix(0.52, a, inW);
 }`)
       .replace('#include <map_fragment>', `
+  // the coarse horizon mesh steps aside where the 2 m data exists (its chords would poke through crater bowls)
+  if (wideCut > 0.5 && abs(vEN.x - GC.x) < 1016.0 && abs(vEN.y - GC.y) < 1016.0) discard;
   float alb = albedoAt(vEN);
   float camD = distance(vW, camPos);
   if (detailOn > 0.5) {
@@ -224,6 +226,6 @@ float albedoAt(vec2 en){
     }
   }`);
   };
-  mat.customProgramCacheKey = () => 'terrain-v6';
+  mat.customProgramCacheKey = () => 'terrain-v7' + (wideCut ? 'w' : '');
   return mat;
 }

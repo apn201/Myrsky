@@ -65,6 +65,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0, 0, 0);
 const camera = new THREE.PerspectiveCamera(50, 16 / 9, 0.1, 30000);
 const post = createPost(renderer, LOW ? 0 : 4);
+post.setScale(LOW ? 0.6 : 0.72);
 
 function resize() {
   const r = view.getBoundingClientRect();
@@ -89,7 +90,7 @@ const earthLight = new THREE.DirectionalLight(0xc8d8ff, 0);
 scene.add(earthLight, earthLight.target);
 const ambient = new THREE.AmbientLight(0xffffff, 0); scene.add(ambient);
 // light bounced off the sunlit ground onto the hardware (lunar albedo about 0.12)
-const bounce = new THREE.HemisphereLight(0x000000, 0x9a948c, 0); scene.add(bounce);
+const bounce = new THREE.HemisphereLight(0x000000, 0xf2ece4, 0); scene.add(bounce);
 
 // ------------------------------------------------------------------ sky objects
 const SKY_R = 25000;
@@ -125,8 +126,7 @@ const earthMat = new THREE.ShaderMaterial({
   vertexShader: 'varying vec2 vUv; varying vec3 vN; void main(){ vUv = uv; vN = normalize(mat3(modelMatrix) * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
   fragmentShader: `uniform sampler2D map; uniform vec3 sunDir; uniform float bright; varying vec2 vUv; varying vec3 vN;
     void main(){ vec3 c = pow(texture2D(map, vUv).rgb, vec3(2.2)); float l = smoothstep(-0.06, 0.25, dot(normalize(vN), sunDir));
-      vec3 atm = vec3(0.25,0.45,1.0) * pow(1.0 - abs(dot(normalize(vN), vec3(0.0))), 2.0) * 0.0;
-      gl_FragColor = vec4((c * 1.4 + atm) * l * bright, 1.0); }`,
+      gl_FragColor = vec4(c * l * bright, 1.0); }`,
   depthWrite: false,
 });
 const earthMesh = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 32), earthMat);
@@ -195,16 +195,18 @@ function applyTime(t) {
   sunLight.color.setRGB(1, 1 - 0.55 * cover, 1 - 0.72 * cover);
   const physEarth = L.earthlight ? 3.2 * 8.4e-5 * s.earthLit * THREE.MathUtils.smoothstep(s.earthAzEl.el, -1, 2) : 0;
   // auto exposure: aim for a mid-grey Moon whatever the light
-  let target = L.exposure ? 0.55 / (0.16 * (physSun + physEarth) + 2e-7) : 1.15;
+  const EXPK = 4.2; // auto exposure constant: sunlit mare at mid-grey
+  let target = L.exposure ? EXPK / (physSun + physEarth + 2e-7) : EXPK / 3.2;
   // centre-weighted metering: when Earth fills the middle of the frame, expose for Earth instead
   if (L.exposure && L.earth) {
     const cd = camera.getWorldDirection(new THREE.Vector3());
     const off = Math.acos(Math.min(1, cd.dot(earthW))) / D2R;
     const share = (s.earthAngularRadius / D2R) * 2 / state.fov;
     const wE = THREE.MathUtils.clamp((share - 0.04) * 8, 0, 1) * (1 - THREE.MathUtils.smoothstep(off, state.fov * 0.15, state.fov * 0.4));
-    const earthTarget = 0.55 / (3.2 * 0.3 * 0.6 * Math.max(0.15, s.earthLit));
+    const earthTarget = 0.5 / (0.3 * 3.2 / Math.PI * Math.sqrt(Math.max(0.1, s.earthLit)));
     target = Math.exp(Math.log(target) * (1 - wE) + Math.log(earthTarget) * wE);
   }
+  target /= 1 + 5 * post.uniforms.sunAmt.value; // the Sun in the frame pulls the auto exposure down
   const k = Math.min(1, frameDt * (Math.abs(state.speed) > 600 ? 8 : 2.5));
   gainS = gainS ? Math.exp(Math.log(gainS) + (Math.log(target) - Math.log(gainS)) * k) : target;
   const S = Math.min(gainS, 2e5);
@@ -214,7 +216,9 @@ function applyTime(t) {
   sunLight.target.position.copy(w(SH.e, SH.n, 0));
   sunLight.castShadow = L.shadows;
   earthLight.intensity = physEarth * S;
-  bounce.intensity = (physSun * Math.max(0, s.sun[2]) + physEarth * Math.max(0, s.earth[2])) * 0.12 * S * 2.5;
+  // irradiance on a downward-facing surface from ground of albedo 0.11 lit at elevation e: E sin(e) A
+  bounce.intensity = (physSun * Math.max(0, s.sun[2]) + physEarth * Math.max(0, s.earth[2])) * 0.11 * S;
+  ambient.intensity = physSun * Math.max(0, s.sun[2]) * 0.11 * 0.03 * S; // light scattered from distant slopes into shadows
   earthLight.position.copy(camPos).addScaledVector(earthW, 1000); earthLight.target.position.copy(camPos);
   terrainMat.userData.uniforms.sunDirW.value.copy(sunW);
   terrainMat.userData.uniforms.camPos.value.copy(camPos);
@@ -225,7 +229,7 @@ function applyTime(t) {
   const m = new THREE.Matrix4().set(e[0], e[1], e[2], 0, u[0], u[1], u[2], 0, -n[0], -n[1], -n[2], 0, 0, 0, 0, 1);
   starGroup.matrix.copy(new THREE.Matrix4().makeTranslation(camPos.x, camPos.y, camPos.z).multiply(m));
   starGroup.visible = L.stars && !!starMat;
-  if (starMat) starMat.uniforms.gain.value = S * 6e-4 * (0.2 + 0.8 * Math.min(1, 50 / state.fov));
+  if (starMat) starMat.uniforms.gain.value = S * 4.8e-4 * (0.2 + 0.8 * Math.min(1, 50 / state.fov));
   // Earth: position, size, rotation, phase
   const dist = SKY_R * 0.9, r = dist * Math.tan(s.earthAngularRadius);
   const ax = s.earthAxes;
@@ -234,7 +238,7 @@ function applyTime(t) {
   earthMesh.matrix.set(cx.x * r, cy.x * r, cz.x * r, pos.x, cx.y * r, cy.y * r, cz.y * r, pos.y, cx.z * r, cy.z * r, cz.z * r, pos.z, 0, 0, 0, 1);
   earthMesh.visible = L.earth;
   earthMat.uniforms.sunDir.value.copy(sunW);
-  earthMat.uniforms.bright.value = 3.2 * 0.3 * S * 0.6;
+  earthMat.uniforms.bright.value = 3.2 / Math.PI * S * (L.sun ? 1 : 0); // texture used as albedo, Lambertian
   // Sun disk
   sunSprite.position.copy(camPos).addScaledVector(sunW, dist);
   const sunR = dist * Math.tan(0.2666 * D2R);
@@ -245,6 +249,21 @@ function applyTime(t) {
   if (ringMesh.visible) {
     ringMesh.position.copy(pos); ringMesh.scale.setScalar(r * 1.0); ringMesh.lookAt(camPos);
     ringMat.color.setRGB(1, 0.35, 0.16).multiplyScalar(Math.min(40, 3.2 * 9e-3 * S) * THREE.MathUtils.smoothstep(cover, 0.6, 1));
+  }
+  // where the Sun is on screen, and whether the ground or hardware hides it, for the lens glare
+  {
+    const sp = camPos.clone().addScaledVector(sunW, 1000).project(camera);
+    const cd = camera.getWorldDirection(new THREE.Vector3());
+    const off = Math.acos(Math.min(1, cd.dot(sunW))) / D2R;
+    let hidden = 0;
+    const cE = camPos.x, cN = -camPos.z, hor = Math.hypot(sunW.x, sunW.z);
+    for (let d = 2; d < 2000; d *= 1.15) { // terrain horizon toward the Sun
+      const h = camPos.y + sunW.y / Math.max(hor, 1e-4) * d;
+      if (h < heightAt(cE + sunW.x / hor * d, cN - sunW.z / hor * d)) { hidden = 1; break; }
+    }
+    const near = 1 - THREE.MathUtils.smoothstep(off, state.fov * 0.5, state.fov * 0.5 + 25);
+    post.uniforms.sunUV.value.set((sp.x + 1) / 2, (sp.y + 1) / 2);
+    post.uniforms.sunAmt.value = (sp.z < 1 ? 1 : 0) * near * sunVis * (1 - hidden) * (L.sun ? 1 : 0) * (state.layers.filter && !state.fullscreen ? 1 : 0);
   }
   // exposure-driven noise
   post.uniforms.gain.value = THREE.MathUtils.clamp(Math.log10(S) / 4.3, 0, 1);
@@ -407,7 +426,7 @@ function buildUI() {
   $('zin').onclick = () => { state.fov /= 1.5; focusPull(); };
   $('zout').onclick = () => { state.fov *= 1.5; focusPull(); };
   $('full').onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else view.requestFullscreen?.(); };
-  document.addEventListener('fullscreenchange', () => { state.fullscreen = !!document.fullscreenElement; setTimeout(resize, 50); });
+  document.addEventListener('fullscreenchange', () => { state.fullscreen = !!document.fullscreenElement; post.setScale(state.fullscreen ? 1 : (LOW ? 0.6 : 0.72)); setTimeout(resize, 50); });
   $('share').onclick = () => { const u = shareURL(); navigator.clipboard?.writeText(u); $('share').textContent = 'link copied'; setTimeout(() => ($('share').textContent = 'link to this view'), 1500); };
   $('dateGo').onclick = () => { const v = $('date').value; if (v) { const t = Date.parse(v + 'Z'); if (!isNaN(t)) { state.live = false; state.speed = 0; state.t = Math.max(DATES.rangeStart, Math.min(Date.now(), t)); } } };
   // jump links
@@ -505,6 +524,23 @@ function openSheet(id) {
   $('sheetBody').innerHTML = html; $('sheet').hidden = false;
 }
 window.oosSheet = openSheet;
+// dev only: save the current frame through tools/devserver.py
+window.oosState = state; window.oosSetCam = setCam;
+window.oosViews = {
+  flag: { t: '1969-11-19T12:45:00Z', cam: 1, yaw: 236, pitch: 3, fov: 50 }, upsun: { t: '1969-11-19T12:45:00Z', cam: 1, yaw: 100, pitch: -2, fov: 60 },
+  downsun: { t: '1969-11-19T12:45:00Z', cam: 1, yaw: 280, pitch: -2, fov: 60 }, lm: { t: '1969-11-19T12:45:00Z', cam: 1, yaw: 207, pitch: 2, fov: 22 },
+  surveyor67: { t: '1967-04-24T06:00:00Z', cam: 1, yaw: 137.5, pitch: -3, fov: 6 }, cam2: { t: '1969-11-20T06:45:00Z', cam: 2, yaw: 311, pitch: 1, fov: 45 },
+  night: { live: true, cam: 1, yaw: 197, pitch: 2, fov: 50 }, touchdown: { t: '1969-11-19T06:56:00Z', cam: 1, yaw: 205, pitch: 2, fov: 42 },
+};
+window.oosShoot = async (names, prefix = '') => {
+  for (const n of names) {
+    const v = oosViews[n]; setCam(v.cam, true); state.live = !!v.live; state.speed = 0; if (v.t) state.t = Date.parse(v.t);
+    state.yaw = v.yaw; state.pitch = v.pitch; state.fov = v.fov;
+    await new Promise((r) => setTimeout(r, 3000)); await oosShot(prefix + n);
+  }
+  return 'done';
+};
+window.oosShot = (name) => { post.render(scene, camera); const u = canvas.toDataURL('image/jpeg', 0.92); return fetch('/__shot?name=' + encodeURIComponent(name), { method: 'POST', body: u }).then((r) => r.status); };
 
 function tickerText(t) { const x = TICKER.find((k) => t >= k.from && t < k.to); return x ? x.text : ''; }
 

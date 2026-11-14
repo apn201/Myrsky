@@ -11,6 +11,7 @@ const D2R = Math.PI / 180;
 const $ = (id) => document.getElementById(id);
 const qs = new URLSearchParams(location.search);
 const DEBUG = qs.has('debug');
+if (qs.has('embed')) document.body.classList.add('embed');
 
 // ------------------------------------------------------------------ state (the only state)
 const LAYERS = [
@@ -128,6 +129,10 @@ const earthMat = new THREE.ShaderMaterial({
 const earthMesh = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 32), earthMat);
 earthMesh.matrixAutoUpdate = false; earthMesh.renderOrder = -1; earthMesh.frustumCulled = false;
 scene.add(earthMesh);
+// red ring: sunlight bent through Earth's atmosphere during an eclipse seen from the Moon
+const ringMat = new THREE.MeshBasicMaterial({ color: 0xff5a28, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+const ringMesh = new THREE.Mesh(new THREE.RingGeometry(0.99, 1.07, 96), ringMat);
+ringMesh.renderOrder = -1; ringMesh.frustumCulled = false; scene.add(ringMesh);
 const sunSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), color: 0xffffff, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
 sunSprite.renderOrder = -1; scene.add(sunSprite);
 function glowTexture() {
@@ -181,7 +186,10 @@ function applyTime(t) {
   const sunW = enuToWorld(s.sun), earthW = enuToWorld(s.earth);
   const cover = sunCovered(s);
   const sunVis = THREE.MathUtils.smoothstep(s.sunAzEl.el, -0.27, 0.27) * (1 - cover);
-  const physSun = L.sun ? 3.2 * sunVis : 0;
+  const sunUp = THREE.MathUtils.smoothstep(s.sunAzEl.el, -0.27, 0.27);
+  // during an eclipse a little reddened light still arrives through Earth's atmosphere
+  const physSun = L.sun ? 3.2 * sunVis + 3.2 * sunUp * cover * 4e-4 : 0;
+  sunLight.color.setRGB(1, 1 - 0.55 * cover, 1 - 0.72 * cover);
   const physEarth = L.earthlight ? 3.2 * 8.4e-5 * s.earthLit * THREE.MathUtils.smoothstep(s.earthAzEl.el, -1, 2) : 0;
   // auto exposure: aim for a mid-grey Moon whatever the light
   let target = L.exposure ? 0.55 / (0.16 * (physSun + physEarth) + 2e-7) : 1.15;
@@ -230,6 +238,11 @@ function applyTime(t) {
   sunSprite.scale.setScalar(sunR * 2 / 0.12 * 0.5);
   sunSprite.material.color.setScalar(Math.min(60, 5e4 * S) * (1 - cover) * (L.sun ? 1 : 0));
   sunSprite.visible = s.sunAzEl.el > -0.6;
+  ringMesh.visible = cover > 0.05 && L.earth && L.sun;
+  if (ringMesh.visible) {
+    ringMesh.position.copy(pos); ringMesh.scale.setScalar(r * 1.0); ringMesh.lookAt(camPos);
+    ringMat.color.setRGB(1, 0.35, 0.16).multiplyScalar(Math.min(40, 3.2 * 9e-3 * S) * THREE.MathUtils.smoothstep(cover, 0.6, 1));
+  }
   // exposure-driven noise
   post.uniforms.gain.value = THREE.MathUtils.clamp(Math.log10(S) / 4.3, 0, 1);
   // hardware by date

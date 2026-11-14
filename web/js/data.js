@@ -125,6 +125,7 @@ export const OBJECTS = [
 // One list drives the jump links, the info page links and the ticker. Times are UTC.
 export const JUMPS = [
   { id: 'surveyor', label: '1967: Surveyor 3 alone', t: T('1967-04-24T06:00:00Z'), cam: 1, yaw: 137.5, pitch: -3, fov: 6 },
+  { id: 'eclipse', label: '1967: Earth eclipses the Sun', t: T('1967-04-24T12:06:26Z'), cam: 1, aimEarth: true, fov: 7 },
   { id: 'touchdown', label: '1969: Apollo 12 lands', t: DATES.touchdown + 30e3, cam: 1, yaw: 200, pitch: 1, fov: 40 },
   { id: 'flag', label: 'Flag up', t: DATES.flagUp + 60e3, cam: 1, yaw: 252, pitch: 3, fov: 26 },
   { id: 'alsep', label: 'Science station on', t: DATES.alsepData, cam: 1, yaw: 307.5, pitch: -0.8, fov: 7 },
@@ -139,6 +140,7 @@ export const JUMPS = [
 export const TICKER = [
   { from: DATES.rangeStart, to: DATES.surveyorLands, text: 'Nothing made by people has touched this part of the Moon yet. Surveyor 3 is on its way.' },
   { from: DATES.surveyorLands, to: DATES.surveyorLands + 86400e3, text: '20 Apr 1967 00:04 UTC - Surveyor 3 lands. Its engines keep firing, so it bounces twice.' },
+  { from: T('1967-04-24T10:00:00Z'), to: T('1967-04-24T14:10:00Z'), text: "24 Apr 1967 - From the Moon, Earth passes in front of the Sun: a lunar eclipse seen from the other side. Sunlight bent through Earth's air makes a red ring. Surveyor 3 photographed it." },
   { from: DATES.surveyorLands + 86400e3, to: DATES.surveyorLastContact, text: 'Surveyor 3 is taking pictures and digging trenches with its scoop. 6,315 pictures in two weeks.' },
   { from: DATES.surveyorLastContact, to: DATES.launch, text: 'Surveyor 3 is silent. It waits on the crater slope for two and a half years.' },
   { from: DATES.launch, to: DATES.touchdown, text: 'Apollo 12 is on its way. Lightning hit the rocket twice during launch, 36 and 52 seconds after liftoff.' },

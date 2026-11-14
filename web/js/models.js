@@ -113,7 +113,41 @@ export async function loadLM() {
   lm.position.copy(ground('lm', -0.15));
   shadowAll(lm);
   const envMats = [foil, panel, black, grey];
-  return { lm, ascent, descent, setEnv(i) { for (const mm of envMats) mm.envMapIntensity = i; } };
+  // The model only casts the shadow. What the camera sees is the real lander: a cut-out of the crew's
+  // panorama taken near the TV camera (tools/make_lm_impostor.py), turned to face the camera.
+  for (const mm of envMats) { mm.colorWrite = false; mm.depthWrite = false; }
+  lm.traverse((c) => { if (c.isMesh && c.material.map) { c.material.colorWrite = false; c.material.depthWrite = false; } });
+  const [pFull, pDesc] = await Promise.all([tl.loadAsync('assets/lm_photo_full.png'), tl.loadAsync('assets/lm_photo_descent.png')]);
+  const photoMat = (tex) => {
+    tex.colorSpace = THREE.NoColorSpace; tex.anisotropy = 4;
+    return new THREE.ShaderMaterial({
+      uniforms: { map: { value: tex }, bright: { value: 1 }, tint: { value: new THREE.Color(1, 1, 1) } },
+      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+      fragmentShader: `uniform sampler2D map; uniform float bright; uniform vec3 tint; varying vec2 vUv;
+        void main(){ vec4 t = texture2D(map, vUv); if (t.a < 0.45) discard; gl_FragColor = vec4(pow(t.rgb, vec3(2.2)) * bright * tint, 1.0); }`,
+      side: THREE.DoubleSide,
+    });
+  };
+  // photo geometry: crop 825 x 680 px at 0.0107 m/px; lander axis at 54.5 % across; west footpad 630 px from the top
+  const PW = 825 * 0.010687, PH = 680 * 0.010687;
+  const geo = new THREE.PlaneGeometry(PW, PH);
+  geo.translate(PW * (0.5 - 0.545), PH / 2 - 0.53, 0);
+  const photo = new THREE.Group();
+  const full = new THREE.Mesh(geo, photoMat(pFull)), desc = new THREE.Mesh(geo, photoMat(pDesc));
+  photo.add(full, desc);
+  photo.position.copy(ground('lm', 0));
+  return {
+    lm, ascent, descent, photo, full, desc,
+    setEnv(i) { for (const mm of envMats) mm.envMapIntensity = i; },
+    setPhoto(bright, tint, camPos, liftedOff) {
+      full.visible = !liftedOff; desc.visible = liftedOff;
+      for (const mm of [full.material, desc.material]) { mm.uniforms.bright.value = bright; mm.uniforms.tint.value.copy(tint); }
+      // face the camera (about the vertical axis), 2 m toward it so the nearest footpad is not buried
+      const dx = camPos.x - lm.position.x, dz = camPos.z - lm.position.z, d = Math.hypot(dx, dz);
+      photo.rotation.y = Math.atan2(dx, dz);
+      photo.position.set(lm.position.x + dx / d * 2.0, lm.position.y + 0.15, lm.position.z + dz / d * 2.0);
+    },
+  };
 }
 
 export function buildSurveyor() {
@@ -168,9 +202,36 @@ export function buildSurveyor() {
   shadowAll(g);
   const parts = [];
   frame.traverse((c) => { if (c.isMesh && c.material === white) parts.push(c); });
+  // What the camera sees is the real Surveyor 3: cut-outs of crew photo AS12-48-7100 (black and white),
+  // in three states (complete, TV camera removed, camera and scoop removed). The model casts the shadow.
+  g.traverse((c) => { if (c.isMesh) { c.material = c.material.clone(); c.material.colorWrite = false; c.material.depthWrite = false; } });
+  const tl = new THREE.TextureLoader();
+  const mk = (file) => {
+    const tex = tl.load(file); tex.colorSpace = THREE.NoColorSpace; tex.anisotropy = 4;
+    return new THREE.ShaderMaterial({
+      uniforms: { map: { value: tex }, bright: { value: 1 }, tint: { value: new THREE.Color(1, 1, 1) } },
+      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+      fragmentShader: `uniform sampler2D map; uniform float bright; uniform vec3 tint; varying vec2 vUv;
+        void main(){ vec4 t = texture2D(map, vUv); if (t.a < 0.45) discard; gl_FragColor = vec4(pow(t.rgb, vec3(2.2)) * bright * tint, 1.0); }`,
+      side: THREE.DoubleSide,
+    });
+  };
+  // crop 710 x 470 (1000-scale) at 0.0068 m per unit; axis at 48.6 %; ground line 400 units from the top
+  const PW = 710 * 0.0068, PH = 470 * 0.0068;
+  const pg = new THREE.PlaneGeometry(PW, PH); pg.translate(PW * (0.5 - 0.486), PH / 2 - 0.48, 0);
+  const states = ['full', 'nocam', 'bare'].map((n) => new THREE.Mesh(pg, mk(`assets/sv_photo_${n}.png`)));
+  const photo = new THREE.Group(); states.forEach((s) => photo.add(s));
+  const base = w(e, n, heightAt(e, n));
   return {
-    group: g, camera, scoop,
-    setDusty(d) { for (const p of parts) p.material = d ? tan : white; },
+    group: g, camera, scoop, photo,
+    setDusty() {}, // the photo carries the paint colour now; the model only casts the shadow
+    setPhoto(t, bright, tint, camPos) {
+      const st = t < Date.parse('1969-11-20T06:48:52Z') ? 0 : t < Date.parse('1969-11-20T06:50:43Z') ? 1 : 2;
+      states.forEach((s, i) => { s.visible = i === st; s.material.uniforms.bright.value = bright; s.material.uniforms.tint.value.copy(tint); });
+      const dx = camPos.x - base.x, dz = camPos.z - base.z, dd = Math.hypot(dx, dz);
+      photo.rotation.y = Math.atan2(dx, dz);
+      photo.position.set(base.x + dx / dd * 1.2, base.y, base.z + dz / dd * 1.2);
+    },
   };
 }
 
@@ -237,7 +298,7 @@ export function buildDish() {
       head.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
     },
     setFallen(f) {
-      if (f) { upright.rotation.set(0, 0.6, 1.35); upright.position.set(0, 0.25, 0); head.quaternion.set(0, 0, 0, 1); head.rotation.set(0.9, 0, 0.3); }
+      if (f) { upright.rotation.set(0, 2.2, 1.42); upright.position.set(0, 0.12, 0); head.quaternion.set(0, 0, 0, 1); head.rotation.set(0, 0, -0.75); } // tripod on the ground, bowl tipped about 40 deg up (real pose unknown: no photo exists)
       else { upright.rotation.set(0, 0, 0); upright.position.set(0, 0, 0); }
     },
   };

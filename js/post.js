@@ -3,10 +3,10 @@
 // Code written with an AI assistant (Claude Code, Anthropic), Nov 2026.
 import * as THREE from 'three';
 
-export function createPost(renderer) {
+export function createPost(renderer, samples = 4) {
   const size = new THREE.Vector2();
   renderer.getDrawingBufferSize(size);
-  const rt = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: 4 });
+  const rt = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples });
   rt.depthTexture = new THREE.DepthTexture(size.x, size.y);
   rt.depthTexture.type = THREE.FloatType;
   const uniforms = {

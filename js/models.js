@@ -277,8 +277,19 @@ export function buildDish() {
   const upright = new THREE.Group();
   for (let i = 0; i < 3; i++) { const a = i * 2.094; upright.add(rod(new THREE.Vector3(Math.cos(a) * 0.9, 0, Math.sin(a) * 0.9), new THREE.Vector3(0, 1.8, 0), 0.015, metal)); }
   const head = new THREE.Group(); head.position.y = 1.9;
-  const prof = []; for (let k = 0; k <= 12; k++) { const r = 1.5 * k / 12; prof.push(new THREE.Vector2(r, r * r / (4 * 1.3))); }
-  const dish = new THREE.Mesh(new THREE.LatheGeometry(prof, 16), fabric); head.add(dish);
+  // umbrella fabric: paraboloid that sags between the 16 ribs, darker in the folds
+  const NR = 14, NA = 96, dp = [], dc = [], di = [];
+  for (let i = 0; i <= NR; i++) for (let j = 0; j <= NA; j++) {
+    const r = 1.5 * i / NR, a = j / NA * Math.PI * 2;
+    const sag = (1 - Math.abs(Math.cos(a * 8))) * 0.05 * (r / 1.5);
+    dp.push(Math.cos(a) * r, r * r / (4 * 1.3) + sag, Math.sin(a) * r);
+    const shade = 0.75 + 0.25 * Math.abs(Math.cos(a * 8)) - 0.08 * Math.random();
+    dc.push(shade, shade, shade);
+  }
+  for (let i = 0; i < NR; i++) for (let j = 0; j < NA; j++) { const a0 = i * (NA + 1) + j, b0 = a0 + NA + 1; di.push(a0, b0, a0 + 1, a0 + 1, b0, b0 + 1); }
+  const dg = new THREE.BufferGeometry(); dg.setAttribute('position', new THREE.Float32BufferAttribute(dp, 3)); dg.setAttribute('color', new THREE.Float32BufferAttribute(dc, 3)); dg.setIndex(di); dg.computeVertexNormals();
+  fabric.vertexColors = true;
+  const dish = new THREE.Mesh(dg, fabric); head.add(dish);
   for (let i = 0; i < 16; i++) {
     const a = i * Math.PI / 8; let prev = new THREE.Vector3(0, 0, 0);
     for (let k = 1; k <= 6; k++) { const r = 1.5 * k / 6; const p = new THREE.Vector3(Math.cos(a) * r, r * r / (4 * 1.3) + 0.004, Math.sin(a) * r); head.add(rod(prev, p, 0.008, ribMat)); prev = p; }
@@ -395,7 +406,7 @@ export function buildRocks(centres, seed = 1) {
     }
     g.computeVertexNormals(); geos.push(g);
   }
-  const mat = new THREE.MeshStandardMaterial({ color: 0x5a5652, roughness: 0.95, flatShading: true }); // basalt, a bit brighter than the soil
+  const mat = new THREE.MeshStandardMaterial({ color: 0x4c4946, roughness: 1.0, flatShading: true }); // basalt, a bit brighter than the soil
   const group = new THREE.Group();
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), p3 = new THREE.Vector3();
   const lists = geos.map(() => []);
@@ -409,7 +420,7 @@ export function buildRocks(centres, seed = 1) {
       if (c.avoid && c.avoid.some(([ae, an, ar]) => Math.hypot(e - ae, n - an) < ar)) continue;
       const size = 0.06 * Math.pow(rnd(), -1 / 2.56) / 2; // radius m, inverse-CDF of the power law
       const r = Math.min(size, 0.35);
-      const bury = 0.35 + 0.3 * rnd();
+      const bury = 0.55 + 0.35 * rnd(); // Surveyor 3 burial factor 0.6-0.7: mostly half buried
       p3.set(e, heightAt(e, n) - r * bury * 0.75, -n);
       q.setFromEuler(new THREE.Euler(rnd() * 0.5, rnd() * 6.28, rnd() * 0.5));
       sc.set(r * (0.8 + rnd() * 0.5), r, r * (0.8 + rnd() * 0.5));

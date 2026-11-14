@@ -49,10 +49,10 @@ export async function loadTerrain() {
 
 // height texture for the shadow ray-march (metres, half float, row 0 = north)
 export function heightTexture() {
-  const data = new Float32Array(G.N * G.N);
-  for (let i = 0; i < data.length; i++) data[i] = H[i] * 0.01;
-  const tex = new THREE.DataTexture(data, G.N, G.N, THREE.RedFormat, THREE.FloatType);
-  tex.flipY = false; tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.NearestFilter;
+  const data = new Uint16Array(G.N * G.N);
+  for (let i = 0; i < data.length; i++) data[i] = THREE.DataUtils.toHalfFloat(H[i] * 0.01);
+  const tex = new THREE.DataTexture(data, G.N, G.N, THREE.RedFormat, THREE.HalfFloatType);
+  tex.flipY = false; tex.magFilter = THREE.LinearFilter; tex.minFilter = THREE.LinearFilter;
   tex.needsUpdate = true;
   return tex;
 }
@@ -125,7 +125,7 @@ export function terrainMaterial(texNear, texWide, heightTex) {
   mat.userData.uniforms = {
     tNear: { value: texNear }, tWide: { value: texWide }, tHeight: { value: heightTex },
     sunDirW: { value: new THREE.Vector3(0, 1, 0) }, camPos: { value: new THREE.Vector3() },
-    hfOn: { value: 1 }, detailOn: { value: 1 }, albedoGain: { value: 0.16 },
+    hfOn: { value: 1 }, detailOn: { value: 1 }, albedoGain: { value: 0.11 },
   };
   mat.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, mat.userData.uniforms);
@@ -143,6 +143,21 @@ float hash12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx
 float vnoise(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
   return mix(mix(hash12(i),hash12(i+vec2(1,0)),f.x), mix(hash12(i+vec2(0,1)),hash12(i+vec2(1,1)),f.x), f.y); }
 float fbm(vec2 p){ float a=0.5, s=0.0; for(int i=0;i<4;i++){ s+=a*vnoise(p); p*=2.03; a*=0.5; } return s; }
+// small craters below the 2 m height data: bowl plus raised rim, random size per cell (modelled, steady-state field)
+float craters(vec2 p, float cell, float density){
+  vec2 g = floor(p / cell); float h = 0.0;
+  for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) {
+    vec2 c = g + vec2(float(i), float(j));
+    if (hash12(c + 5.3) > density) continue;
+    vec2 ctr = (c + vec2(hash12(c), hash12(c + 17.1))) * cell;
+    float R = cell * (0.18 + 0.32 * hash12(c + 9.7));
+    float r = length(p - ctr) / R;
+    float age = 0.35 + 0.65 * hash12(c + 2.2); // old craters are shallow and soft
+    h += (r < 1.0 ? (r * r - 1.0) * 0.17 * R : 0.0) * age + 0.05 * R * age * exp(-pow((r - 1.0) / 0.28, 2.0));
+  }
+  return h;
+}
+float microH(vec2 p){ return 0.55 * (craters(p, 4.0, 0.16) + craters(p + 41.0, 1.3, 0.14) + craters(p + 7.0, 0.4, 0.12)) + 0.03 * fbm(p * 1.3) + 0.012 * fbm(p * 5.0) + 0.004 * fbm(p * 19.0); }
 vec2 hUV(vec2 en){ return vec2((en.x - (GC.x - 1024.0)) / 2048.0, ((GC.y + 1024.0) - en.y) / 2048.0); }
 float hAt(vec2 en){ return texture2D(tHeight, hUV(en)).r - dot(en,en) / 3474800.0; }
 float albedoAt(vec2 en){
@@ -161,10 +176,11 @@ float albedoAt(vec2 en){
   float camD = distance(vW, camPos);
   if (detailOn > 0.5) {
     float near = 1.0 - smoothstep(10.0, 90.0, camD);
-    float d = fbm(vEN * 9.0) * 0.6 + fbm(vEN * 37.0) * 0.4;
-    alb *= mix(1.0, 0.9 + 0.2 * d, near);
+    float d = fbm(vEN * 3.0) * 0.6 + fbm(vEN * 23.0) * 0.4;
+    alb *= mix(1.0, 0.93 + 0.14 * d, near);
   }
-  diffuseColor.rgb *= alb * albedoGain * vec3(1.0, 0.985, 0.96) * 2.4;
+  // texture stores albedo/1.9 with the site median at 1.0; Apollo 12 mare normal albedo ~0.11
+  diffuseColor.rgb *= alb * 1.9 * albedoGain * vec3(1.0, 0.985, 0.96);
   // terrain shadow toward the Sun
   if (hfOn > 0.5 && sunDirW.y > -0.02) {
     vec3 sd = normalize(sunDirW);
@@ -182,20 +198,32 @@ float albedoAt(vec2 en){
   }
 `)
       .replace('getDirectionalLightInfo( directionalLight, directLight );',
-        'getDirectionalLightInfo( directionalLight, directLight );\n\t\tif ( UNROLLED_LOOP_INDEX == 0 ) directLight.color *= hfShadow;');
+        `getDirectionalLightInfo( directionalLight, directLight );
+		{ // lunar photometric function (Lunar-Lambert, McEwen 1991) with a Hapke-style opposition surge,
+		  // instead of plain Lambert: the Moon shows no limb darkening and brightens toward zero phase
+		  float mu0 = max(dot(geometryNormal, directLight.direction), 1e-3);
+		  float mu = max(dot(geometryNormal, geometryViewDir), 1e-3);
+		  float g = degrees(acos(clamp(dot(directLight.direction, geometryViewDir), -1.0, 1.0)));
+		  float Lp = clamp(1.0 - 0.019 * g + 2.42e-4 * g * g - 1.46e-6 * g * g * g, 0.0, 1.0);
+		  float Bop = 1.0 + 0.9 / (1.0 + tan(radians(g) * 0.5) / 0.06);
+		  directLight.color *= (2.0 * Lp / (mu0 + mu) + (1.0 - Lp)) * Bop;
+		  if ( UNROLLED_LOOP_INDEX == 0 ) directLight.color *= hfShadow;
+		}`);
     // fine normal detail near the camera (sub-2 m bumps)
     sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
   if (detailOn > 0.5) {
-    float nearN = 1.0 - smoothstep(8.0, 70.0, camD);
-    float e0 = fbm(vEN * 4.0) + 0.5 * fbm(vEN * 15.0);
-    float ex = fbm((vEN + vec2(0.05, 0.0)) * 4.0) + 0.5 * fbm((vEN + vec2(0.05, 0.0)) * 15.0);
-    float ey = fbm((vEN + vec2(0.0, 0.05)) * 4.0) + 0.5 * fbm((vEN + vec2(0.0, 0.05)) * 15.0);
-    vec3 bumpW = normalize(vec3(-(ex - e0) * 2.2, 1.0, (ey - e0) * 2.2));
-    vec3 nW = normalize((vec4(normal, 0.0) * viewMatrix).xyz);
-    vec3 mixed = normalize(nW + (bumpW - vec3(0.0, 1.0, 0.0)) * nearN * 0.6);
-    normal = normalize((viewMatrix * vec4(mixed, 0.0)).xyz);
+    float nearN = 1.0 - smoothstep(15.0, 90.0, camD);
+    if (nearN > 0.0) {
+      float ep = 0.03;
+      float hx = microH(vEN + vec2(ep, 0.0)) - microH(vEN - vec2(ep, 0.0));
+      float hy = microH(vEN + vec2(0.0, ep)) - microH(vEN - vec2(0.0, ep));
+      vec3 bumpW = normalize(vec3(-hx / (2.0 * ep), 1.0, hy / (2.0 * ep)));
+      vec3 nW = normalize((vec4(normal, 0.0) * viewMatrix).xyz);
+      vec3 mixed = normalize(nW + (bumpW - vec3(0.0, 1.0, 0.0)) * nearN);
+      normal = normalize((viewMatrix * vec4(mixed, 0.0)).xyz);
+    }
   }`);
   };
-  mat.customProgramCacheKey = () => 'terrain-v3';
+  mat.customProgramCacheKey = () => 'terrain-v6';
   return mat;
 }

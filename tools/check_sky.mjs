@@ -16,3 +16,19 @@ for (const d of ['1967-04-24T10:30:00Z', '1967-04-24T11:30:00Z', '1967-04-24T12:
   const s = skyState(new Date(d));
   console.log('eclipse check', d, 'covered', sunCovered(s).toFixed(2), 'sun el', s.sunAzEl.el.toFixed(1), 'earth el', s.earthAzEl.el.toFixed(1));
 }
+// Earth orientation: which longitude of Earth faces the Moon? Our matrix vs RA(Moon) - GAST.
+{
+  const A = globalThis.Astronomy;
+  for (const d of ['1969-11-19T12:00:00Z', '2026-11-15T00:00:00Z']) {
+    const s = skyState(new Date(d));
+    const toMoon = s.earth.map((c) => -c); // ENU direction Earth -> site
+    const ax = s.earthAxes; const dt = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    const x = dt(toMoon, ax.x), y = dt(toMoon, ax.y), z = dt(toMoon, ax.z);
+    const ours = Math.atan2(y, x) * 180 / Math.PI, latOurs = Math.asin(z) * 180 / Math.PI;
+    const t = A.MakeTime((Date.parse(d) - Date.UTC(2000, 0, 1, 12)) / 86400000);
+    const m = A.GeoMoon(t); const r = A.RotateVector(A.Rotation_EQJ_EQD(t), m);
+    let ref = Math.atan2(r.y, r.x) * 180 / Math.PI - A.SiderealTime(t) * 15; ref = ((ref + 540) % 360) - 180;
+    const decRef = Math.atan2(r.z, Math.hypot(r.x, r.y)) * 180 / Math.PI;
+    console.log('sub-lunar point', d, 'ours lon', ours.toFixed(2), 'lat', latOurs.toFixed(2), '| reference lon', ref.toFixed(2), 'lat', decRef.toFixed(2));
+  }
+}

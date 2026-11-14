@@ -61,8 +61,8 @@ export async function loadLM() {
     const col = mat.color;
     if (col && col.r > 0.6 && col.g < 0.6 && col.b < 0.2) { // gold-yellow foil
       mat.color = new THREE.Color(0xc89632); mat.metalness = 0.45; mat.roughness = 0.45; mat.normalMap = foilN; mat.normalScale = new THREE.Vector2(0.6, 0.6);
-    } else if (col && col.r > 0.55 && Math.abs(col.r - col.b) < 0.05) { // grey/silver
-      mat.metalness = 0.5; mat.roughness = 0.55;
+    } else if (col && col.r > 0.55 && Math.abs(col.r - col.b) < 0.05) { // grey/silver: ascent stage panels are grey, not white
+      mat.color.multiplyScalar(0.62); mat.metalness = 0.55; mat.roughness = 0.5;
     } else { mat.roughness = Math.max(mat.roughness ?? 0.6, 0.5); }
     m.material = mat;
     const clone = new THREE.Mesh(m.geometry, mat);
@@ -172,12 +172,20 @@ export function buildFlag() {
 export function buildDish() {
   const g = new THREE.Group();
   const metal = std(0xcfcfcf, 0.45, 0.7);
-  const fabric = new THREE.MeshStandardMaterial({ color: 0xd8d8d0, roughness: 0.55, metalness: 0.3, side: THREE.DoubleSide });
+  // erectable S-band dish: white-pink fabric on 16 dark ribs (crew photo AS12-46-6739)
+  const fabric = new THREE.MeshStandardMaterial({ color: 0xe9dcd6, roughness: 0.7, metalness: 0.0, side: THREE.DoubleSide, transparent: true, opacity: 0.88 });
+  const ribMat = std(0x3a3632, 0.6, 0.3);
   const upright = new THREE.Group();
-  for (let i = 0; i < 3; i++) { const a = i * 2.094; upright.add(rod(new THREE.Vector3(Math.cos(a) * 0.9, 0, Math.sin(a) * 0.9), new THREE.Vector3(0, 1.8, 0), 0.02, metal)); }
+  for (let i = 0; i < 3; i++) { const a = i * 2.094; upright.add(rod(new THREE.Vector3(Math.cos(a) * 0.9, 0, Math.sin(a) * 0.9), new THREE.Vector3(0, 1.8, 0), 0.015, metal)); }
   const head = new THREE.Group(); head.position.y = 1.9;
-  const dish = new THREE.Mesh(new THREE.ConeGeometry(1.5, 0.45, 24, 1, true), fabric); dish.rotation.x = Math.PI; dish.position.y = 0.2; head.add(dish);
-  const feed = rod(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0.9, 0), 0.015, metal); head.add(feed);
+  const prof = []; for (let k = 0; k <= 12; k++) { const r = 1.5 * k / 12; prof.push(new THREE.Vector2(r, r * r / (4 * 1.3))); }
+  const dish = new THREE.Mesh(new THREE.LatheGeometry(prof, 16), fabric); head.add(dish);
+  for (let i = 0; i < 16; i++) {
+    const a = i * Math.PI / 8; let prev = new THREE.Vector3(0, 0, 0);
+    for (let k = 1; k <= 6; k++) { const r = 1.5 * k / 6; const p = new THREE.Vector3(Math.cos(a) * r, r * r / (4 * 1.3) + 0.004, Math.sin(a) * r); head.add(rod(prev, p, 0.008, ribMat)); prev = p; }
+  }
+  head.add(rod(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0.75, 0), 0.012, metal));
+  const feedBox = box(0.08, 0.08, 0.08, metal); feedBox.position.y = 0.78; head.add(feedBox);
   upright.add(head);
   g.add(upright);
   g.position.copy(ground('sband'));
@@ -286,7 +294,7 @@ export function buildRocks(centres, seed = 1) {
     }
     g.computeVertexNormals(); geos.push(g);
   }
-  const mat = new THREE.MeshStandardMaterial({ color: 0x8a8580, roughness: 0.95, flatShading: true });
+  const mat = new THREE.MeshStandardMaterial({ color: 0x6b6762, roughness: 0.95, flatShading: true }); // basalt, a bit brighter than the soil
   const group = new THREE.Group();
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), p3 = new THREE.Vector3();
   const lists = geos.map(() => []);

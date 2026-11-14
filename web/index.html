@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Webcam: Ocean of Storms</title>
+<meta name="description" content="A webcam at the Apollo 12 landing site. Rewind it to 1967.">
+<meta name="generator" content="Hand-written HTML/JS. Code written with an AI assistant (Claude Code, Anthropic), NASA Space Apps 2026.">
+<meta name="ai-disclosure" content="Code and page text drafted with Claude Code (Anthropic). Idea, research and decisions by the author. No AI-generated images, audio or video.">
+<link rel="stylesheet" href="css/style.css">
+<script src="vendor/astronomy.browser.min.js"></script>
+<script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
+</head>
+<body>
+<center>
+<h1>WEBCAM: OCEAN OF STORMS</h1>
+<p class="sub">3.0128&deg; S, 23.4219&deg; W &nbsp;&middot;&nbsp; Oceanus Procellarum, the Moon</p>
+
+<div id="view">
+  <canvas id="scene"></canvas>
+  <div id="labels"></div>
+  <div id="osd"></div>
+  <div id="nosignal" hidden>NO SIGNAL<br><small>CAM 2 was not installed yet</small></div>
+  <div id="loading">connecting to camera...</div>
+  <pre id="debug" hidden></pre>
+</div>
+
+<table class="controls" cellpadding="3">
+<tr><td>
+  <button id="rew" title="hold to rewind faster and faster">&#9664;&#9664; REW</button>
+  <button id="pause">&#10074;&#10074;</button>
+  <button id="play" title="real time">&#9654; PLAY</button>
+  <button id="ff" title="hold to fast-forward">FF &#9654;&#9654;</button>
+  <button id="live"><span class="rec">&#9679;</span> LIVE</button>
+</td><td>
+  <button id="left">&lt;</button><button id="up">&and;</button><button id="down">&or;</button><button id="right">&gt;</button>
+  <button id="zin">ZOOM +</button><button id="zout">ZOOM -</button>
+</td><td>
+  <button data-cam="1" class="on">CAM 1</button> <button data-cam="2">CAM 2</button>
+  <button id="full">fullscreen</button>
+</td></tr>
+<tr><td colspan="3">
+  Date (UTC): <input type="datetime-local" id="date" min="1967-04-01T00:00"> <button id="dateGo">go</button>
+  &nbsp; <a href="#" id="share" onclick="return false">link to this view</a>
+</td></tr>
+</table>
+
+<p id="jumps" class="jumps"><b>Show me:</b> </p>
+<div class="tickerbox"><b>DID YOU KNOW?</b> <span id="ticker"></span></div>
+<p id="readout" class="readout"></p>
+
+<hr width="80%">
+<table width="80%" class="lower"><tr valign="top">
+<td width="55%">
+<h2>Layers</h2>
+<p class="small">Switch parts of the picture on and off to see what each one does.</p>
+<div id="layers"></div>
+</td>
+<td>
+<h2>What am I looking at?</h2>
+<p>Drag the picture to look around. Hold <b>REW</b>. Keep holding.</p>
+<p>Things left here: <a href="javascript:oosSheet('lm')">Intrepid</a>, <a href="javascript:oosSheet('surveyor3')">Surveyor 3</a>, <a href="javascript:oosSheet('flag')">the flag</a>, <a href="javascript:oosSheet('sband')">the dish antenna</a>, <a href="javascript:oosSheet('alsep')">the science station</a>, <a href="javascript:oosSheet('rtg')">its nuclear generator</a>, <a href="javascript:oosSheet('backpacks')">two backpacks</a>.</p>
+<p><a href="info.html"><b>info</b></a> - how this camera works</p>
+<p class="uc">&#9888; UNDER CONSTRUCTION &#9888;</p>
+</td></tr></table>
+
+<div id="sheet" hidden><div class="sheetin"><button id="sheetClose">close</button><div id="sheetBody"></div></div></div>
+
+<hr width="80%">
+<p class="footer">Visitors: <span id="counter" class="counter">004817</span><br>
+Last updated: 1997 &nbsp;&middot;&nbsp; <a href="info.html">info</a><br>
+<small>Best viewed with any browser. NASA Space Apps Challenge 2026: <i>Abandoned but not Forgotten</i>.</small></p>
+</center>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

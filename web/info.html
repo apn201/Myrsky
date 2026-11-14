@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Webcam: Ocean of Storms - info</title>
+<meta name="ai-disclosure" content="Code and page text drafted with Claude Code (Anthropic). Idea, research and decisions by the author. No AI-generated images, audio or video.">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .info { max-width: 760px; margin: 0 auto; text-align: left; line-height: 1.45; }
+  .info h1 { text-align: center; font-size: clamp(30px, 8vw, 64px); margin: 30px 0; }
+  .info h2 { margin-top: 28px; border-bottom: 1px solid #555; }
+  .info table { border-collapse: collapse; width: 100%; }
+  .info td, .info th { border: 1px solid #666; padding: 4px 8px; vertical-align: top; text-align: left; }
+  .info th { color: #ffd700; }
+  .show { font-family: "Courier New", monospace; }
+  .info li { margin: 4px 0; }
+</style>
+</head>
+<body>
+<div class="info">
+<p><a href="index.html">&lt;&lt; back to the camera</a></p>
+
+<h1>THERE IS NO CAMERA.</h1>
+
+<p>Nobody left a webcam on the Moon. There is no CAM 1, no CAM 2, and no website from 1997.</p>
+<p>The picture is calculated in your browser, right now, from NASA data: the shape of the ground, where each piece of hardware stands, where the Sun and Earth are in the sky for the date you picked, and which stars are up. Give it a date, and it draws that date. That is why it can rewind 57 years.</p>
+<p>The hardware is real, and it is still there. This page is about the machines people left behind at one spot on the Moon, and what they found out.</p>
+
+<h2>The story of this place</h2>
+<ul>
+<li><b>1967.</b> A robot called <b>Surveyor 3</b> lands inside a 200 m crater in the Ocean of Storms. It bounces twice, takes 6,315 pictures and digs the soil with a scoop to see whether the ground could hold a crewed lander. Two weeks later the lunar night freezes it. <span class="show"><a href="index.html?jump=surveyor">[show me]</a></span></li>
+<li><b>19 November 1969.</b> Apollo 12's lunar module <b>Intrepid</b> lands on the crater's rim, about 160 m from Surveyor 3. It is the first pinpoint landing: proof that astronauts could be sent to an exact spot. <span class="show"><a href="index.html?jump=touchdown">[show me]</a></span></li>
+<li>Pete Conrad and Alan Bean put up a flag, a dish antenna, and a <b>science station</b> that keeps working after they leave. <span class="show"><a href="index.html?jump=flag">[flag]</a> <a href="index.html?jump=alsep">[science station]</a></span></li>
+<li><b>20 November.</b> They walk down into the crater and visit Surveyor 3. They cut off its camera and scoop and take them home, so scientists can see what 31 months on the Moon did to metal, glass and paint. <span class="show"><a href="index.html?jump=visit">[show me]</a></span></li>
+<li>They throw out their backpacks. The seismometer feels them land. Then the top half of Intrepid lifts off and the rest stays. <span class="show"><a href="index.html?jump=liftoff">[show me]</a></span></li>
+<li><b>1969-1977.</b> The science station sends moonquake, magnetic-field and solar-wind data to Earth for almost eight years, powered by a small nuclear generator. On 30 September 1977 it is switched off from Earth. <span class="show"><a href="index.html?jump=off">[show me]</a></span></li>
+<li><b>2009 onward.</b> NASA's Lunar Reconnaissance Orbiter photographs the site from orbit. The footpaths, the hardware and the flag's shadow are still visible. Those photos are the ground you see on this page. <span class="show"><a href="index.html">[live]</a></span></li>
+</ul>
+
+<h2>What is real, what is modelled, what is invented</h2>
+<table>
+<tr><th>REAL (measured or documented)</th><th>MODELLED (our reconstruction)</th><th>INVENTED (fiction)</th></tr>
+<tr><td>
+The shape of the ground (LROC height model, 2 m)<br>
+Its brightness pattern (LROC photo, 0.5 m)<br>
+Where each object stands (LROC coordinates, mission maps)<br>
+Mission dates and times to the second<br>
+The Sun's and Earth's position for any date<br>
+Earth's phase and which side faces the Moon<br>
+Star positions and brightness<br>
+Sizes of the hardware
+</td><td>
+The 3D shapes of the hardware<br>
+Shadows and lighting<br>
+Rocks and small bumps below 2 m (generated from Surveyor 3's own rock counts)<br>
+Camera exposure and noise<br>
+Autofocus blur<br>
+Earth's surface picture (a 2002 Blue Marble image, not the clouds of that day)<br>
+Flag and antenna orientation (approximate)
+</td><td>
+The webcams<br>
+Their tripods<br>
+The 1997 website<br>
+The visitor counter
+</td></tr>
+</table>
+<p>Things this page does not show: the astronauts themselves (objects appear at the minute the crew set them up), and the footpaths at the right time. The ground picture is from 2010, so its faint tracks are visible at every date, even 1967.</p>
+
+<h2>Where is the Sun?</h2>
+<p>For every frame the page asks where the Sun and Earth are, using the same kind of calculation NASA's planetary ephemerides use (the Astronomy Engine library). It also needs to know exactly how the Moon is turned, because the Moon rotates once a month and wobbles slightly. A day here lasts about two weeks, then a night of two weeks.</p>
+<p>Check: at Apollo 12's touchdown the documents say the Sun was 5.1 degrees above the horizon. This page calculates 5.15. <span class="show"><a href="index.html?jump=touchdown&layers=labels">[show me]</a></span></p>
+<p>Second check: the 2010 orbital photo has shading baked in. Fitting that shading against the height model gives the Sun at azimuth 272 degrees when the photo was taken. The calculation gives 273.</p>
+
+<h2>Why are the shadows right?</h2>
+<p>Shadows are cast from the real Sun direction over the real ground shape. For each point of ground the page marches toward the Sun across the height map and checks whether a hill or crater rim is in the way. Near landing time the Sun is so low that the crater fills with shadow.</p>
+<p>Try the <b>Shadows</b> layer. <span class="show"><a href="index.html?jump=touchdown&layers=-shadows">[shadows off at touchdown]</a></span></p>
+
+<h2>Why is the sky black in daytime?</h2>
+<p>There is no air to scatter sunlight, so the sky stays black even at noon. You still cannot see stars in daylight: the ground is so bright that the camera's exposure is far too short for them. At night the camera turns its gain up, the stars come out, and the picture gets grainier.</p>
+
+<h2>Why does Earth stay in the same place?</h2>
+<p>The Moon always keeps the same side toward Earth, so from this spot Earth hangs about 60 degrees up in the eastern sky and hardly moves. It goes through phases, opposite to the Moon's: when it is night here, Earth is nearly full and lights the ground with blue-white Earthlight. It also turns: watch the continents go by. <span class="show"><a href="index.html?jump=earth">[show me]</a></span></p>
+
+<h2>How could the science station run at night?</h2>
+<p>Solar panels would be useless for two weeks out of four. The station used a SNAP-27 nuclear generator: 3.8 kg of plutonium-238 that stays hot on its own. Its heat halves every 87.7 years, so even today it would still give off about 800 W of heat. Its spec sheet shows that number for whatever date you pick.</p>
+
+<h2>How do we know the cameras are in the right place?</h2>
+<p>CAM 1 and CAM 2 can see each other. Switch on <b>Camera markers</b>: the page draws where the other camera should be, using only the coordinates and the height map. If the tripod is not under its marker, something is wrong. The page also tests the line of sight over the crater rim. CAM 1 to CAM 2: 177 m, bearing 137 degrees one way and 317 the other, and the ground does not block the view.</p>
+
+<h2>The 57-year coincidence</h2>
+<p>This page was built on 14-15 November 2026: 57 years to the day after Apollo 12 launched (14 November 1969, 16:22 UTC, struck by lightning twice on the way up).</p>
+
+<h2>Sources and credits</h2>
+<p>NASA data and resources:</p>
+<ul>
+<li>LROC NAC digital terrain model and orthophotos of the Apollo 12 site, product NAC_DTM_APOLLO12 (NASA/GSFC/Arizona State University). Henriksen et al. (2017), Icarus 283, 122-137.</li>
+<li>LROC coordinates of anthropogenic objects on the Moon (NASA/GSFC/ASU). Wagner et al. (2017), Icarus 283, 92-103.</li>
+<li>SLDEM2015 lunar elevation model (LOLA + Kaguya TC), NASA PDS Geosciences Node.</li>
+<li>NASA 3D Resources: "Apollo Lunar Module" model.</li>
+<li>NASA Space Science Data Coordinated Archive (NSSDCA): Apollo 12 LM, ALSEP, Surveyor 3 entries.</li>
+<li>Apollo 12 Mission Report (MSC-01855), Apollo 12 Press Kit, Apollo 12 Preliminary Science Report (NASA SP-235), ALSEP Flight System Familiarization Manual (1969), Surveyor III Mission Report (JPL TR 32-1177), Surveyor 3 Preliminary Science Results (JPL PD 125), Surveyor Program Results (NASA SP-184).</li>
+<li>NASA Blue Marble (2002) Earth image, NASA Earth Observatory / GSFC.</li>
+<li>Apollo Lunar Surface Journal (Eric M. Jones and Ken Glover, NASA History): event times. Times are facts; no journal text is reproduced.</li>
+</ul>
+<p>Other: Yale Bright Star Catalogue, 5th ed. (Hoffleit and Warren, via CDS). Astronomy Engine by Don Cross (MIT licence). three.js (MIT licence).</p>
+<p>No NASA logos or insignia are used. The US flag on the Moon is shown as the physical object it is.</p>
+
+<h2>How this was made</h2>
+<p>One person, NASA Space Apps Challenge 2026, challenge <i>Abandoned but not Forgotten</i>. The idea, the research, the choice of facts and every decision are the author's; the data was gathered before the weekend, nothing on the site was built before it.</p>
+<p><b>Use of AI:</b> the code (JavaScript, shaders, the Python data-preparation script) and drafts of the page text were written with an AI coding assistant, Claude Code (Anthropic), working from the author's plans and fact sheets. Each code file says so in its header. No image, video or audio on this site is AI-generated: the ground and Earth pictures are NASA images, the models are NASA's or built from simple shapes.</p>
+<p>Source code: see the project repository (link on the project page).</p>
+
+<p><a href="index.html">&lt;&lt; back to the camera</a></p>
+<hr>
+<p class="footer">Last updated: 1997. (Not really. November 2026.)</p>
+</div>
+</body>
+</html>

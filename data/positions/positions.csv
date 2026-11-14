@@ -1,0 +1,15 @@
+id,name,east_m,north_m,up_m,plus_minus_m,source,note
+lm,Intrepid descent stage,0.0,0.0,0.0,2.2,LROC,origin. lat -3.0128 lon 336.5781. Surface radius 1735977.76 m (-1422.2 m vs 1737.4 km sphere)
+surveyor3,Surveyor 3,118.1,-103.1,-10.3,2.6,LROC,on the inner slope of Surveyor crater. lat -3.0162 lon 336.5820
+s3_retro,Surveyor 3 retrorocket impact,106.0,127.4,1.6,10,LROC,bonus. Surveyor's spent solid rocket hit here on 20 Apr 1967
+alsep_cs,ALSEP central station,-87.8,91.0,-0.1,2.2,LROC,126 m from the lander at bearing 316 (north-west). lat -3.0098 lon 336.5752
+alsep_pse,Passive seismometer,-85.2,89.8,,3,McInall map + Mission Report fig 3-6,2.8 m ESE of central station. LROC table rounds it to 3 m SW; report says 10 ft east. Use the map.
+alsep_rtg,SNAP-27 generator,-90.8,92.6,,3,McInall map + Mission Report fig 3-6,3.4 m WNW of central station. Report: 10 ft cable west.
+alsep_sws,Solar wind spectrometer,-88.1,86.3,,3,McInall map + Mission Report fig 3-6,4.7 m south of central station. Report: 13 ft south.
+alsep_lsm,Magnetometer,-80.0,77.0,,3,McInall map + Mission Report fig 3-6,16 m SSE of central station. Report: 50 ft cable SE.
+alsep_side,Ion detector (SIDE) and cold cathode gauge,-103.6,81.4,,4,McInall map + PSR p.85 + Mission Report fig 3-6,18 m WSW of central station. PSR: about 50 ft SW. Report: 60 ft cable. Gauge 3-5 ft from SIDE.
+pse_cover,Discarded seismometer thermal cover,-82.3,95.5,,4,McInall map,thrown aside during deployment
+flag,US flag,-4.2,14.6,,3,McInall map,journal says about 7 m out from the equipment bay between west and north legs. Map puts it about 15 m NNW of the lander centre.
+sband,S-band dish antenna (fallen),0.2,8.5,,3,McInall map,drawn upright on the map. Blown over by the liftoff thruster test. Journal: about 6 m north of north footpad.
+tv_camera,TV camera final spot,8.6,17.1,,4,McInall map,end of the TV cable. 19 m NNE of the lander. CONFLICTS with object sheet (6 m SW). CAM 1 depends on this.
+swc,Solar wind collector,-8.4,33.6,,5,McInall map (small-scale),foil went home. Whether the staff was left is unsourced.

@@ -1,0 +1,45 @@
+rise_utc_1969,highest_utc_1969,set_utc_1969,rise_met,highest_met,set_met,max_elevation_deg,rise_azimuth_deg,highest_azimuth_deg,set_azimuth_deg,closest_km,sunlit,vehicles
+18 Nov 09:01:29,18 Nov 09:08:03,18 Nov 09:14:39,88:39:29,88:46:03,88:52:39,47.7,96,15,293,151,partly,"CSM + LM docked (Intrepid undocks 107:54, separates 108:24)"
+18 Nov 10:59:53,18 Nov 11:06:27,18 Nov 11:13:01,90:37:53,90:44:27,90:51:01,50.3,97,14,293,145,partly,"CSM + LM docked (Intrepid undocks 107:54, separates 108:24)"
+18 Nov 12:58:17,18 Nov 13:04:49,18 Nov 13:11:25,92:36:17,92:42:49,92:49:25,53.2,98,16,292,139,partly,"CSM + LM docked (Intrepid undocks 107:54, separates 108:24)"
+18 Nov 14:56:41,18 Nov 15:03:13,18 Nov 15:09:49,94:34:41,94:41:13,94:47:49,56.2,98,16,291,134,partly,"CSM + LM docked (Intrepid undocks 107:54, separates 108:24)"
+18 Nov 16:55:03,18 Nov 17:01:37,18 Nov 17:08:13,96:33:03,96:39:37,96:46:13,59.5,99,15,290,129,partly,"CSM + LM docked (Intrepid undocks 107:54, separates 108:24)"
+18 Nov 18:53:27,18 Nov 19:00:01,18 Nov 19:06:35,98:31:27,98:38:01,98:44:35,63.0,100,14,290,125,yes,"CSM + LM docked (Intrepid undocks 107:54, separates 108:24)"
+18 Nov 20:51:51,18 Nov 20:58:25,18 Nov 21:04:59,100:29:51,100:36:25,100:42:59,66.8,101,14,289,121,yes,"CSM + LM docked (Intrepid undocks 107:54, separates 108:24)"
+18 Nov 22:50:15,18 Nov 22:56:49,18 Nov 23:03:23,102:28:15,102:34:49,102:41:23,70.7,101,12,288,117,yes,"CSM + LM docked (Intrepid undocks 107:54, separates 108:24)"
+19 Nov 00:48:39,19 Nov 00:55:11,19 Nov 01:01:45,104:26:39,104:33:11,104:39:45,74.9,102,17,287,114,yes,"CSM + LM docked (Intrepid undocks 107:54, separates 108:24)"
+19 Nov 02:47:05,19 Nov 02:53:35,19 Nov 03:00:09,106:25:05,106:31:35,106:38:09,79.2,103,16,286,112,yes,"CSM + LM docked (Intrepid undocks 107:54, separates 108:24)"
+19 Nov 04:45:29,19 Nov 04:46:35,19 Nov 04:46:37,108:23:29,108:24:35,108:24:37,3.8,104,103,,523,yes,"CSM + LM docked (Intrepid undocks 107:54, separates 108:24) (cut by manoeuvre)"
+19 Nov 04:46:51,19 Nov 04:51:59,19 Nov 04:58:31,108:24:51,108:29:59,108:36:31,80.6,103,14,287,111,yes,CSM alone
+19 Nov 06:43:47,19 Nov 06:50:19,19 Nov 06:56:55,110:21:47,110:28:19,110:34:55,85.3,104,24,286,111,yes,CSM alone
+19 Nov 08:42:07,19 Nov 08:48:41,19 Nov 08:55:17,112:20:07,112:26:41,112:33:17,89.9,105,208,285,112,yes,CSM alone
+19 Nov 10:40:27,19 Nov 10:47:03,19 Nov 10:53:39,114:18:27,114:25:03,114:31:39,85.2,106,204,284,113,yes,CSM alone
+19 Nov 12:38:47,19 Nov 12:45:23,19 Nov 12:52:03,116:16:47,116:23:23,116:30:03,80.7,107,194,284,115,yes,CSM alone
+19 Nov 14:37:07,19 Nov 14:43:45,19 Nov 14:50:25,118:15:07,118:21:45,118:28:25,76.4,107,197,283,118,yes,CSM alone
+19 Nov 16:35:29,19 Nov 16:42:07,19 Nov 16:48:47,120:13:29,120:20:07,120:26:47,64.6,100,14,289,126,yes,"CSM alone, after first plane change"
+19 Nov 18:33:53,19 Nov 18:40:31,19 Nov 18:47:11,122:11:53,122:18:31,122:25:11,68.2,101,15,288,123,yes,"CSM alone, after first plane change"
+19 Nov 20:32:19,19 Nov 20:38:55,19 Nov 20:45:35,124:10:19,124:16:55,124:23:35,72.0,101,16,287,119,yes,"CSM alone, after first plane change"
+19 Nov 22:30:43,19 Nov 22:37:21,19 Nov 22:43:59,126:08:43,126:15:21,126:21:59,76.0,102,13,287,117,yes,"CSM alone, after first plane change"
+20 Nov 00:29:09,20 Nov 00:35:45,20 Nov 00:42:23,128:07:09,128:13:45,128:20:23,80.2,103,15,286,114,yes,"CSM alone, after first plane change"
+20 Nov 02:27:35,20 Nov 02:34:09,20 Nov 02:40:47,130:05:35,130:12:09,130:18:47,84.4,103,21,285,113,yes,"CSM alone, after first plane change"
+20 Nov 04:26:01,20 Nov 04:32:35,20 Nov 04:39:11,132:04:01,132:10:35,132:17:11,88.8,104,351,284,112,yes,"CSM alone, after first plane change"
+20 Nov 06:24:27,20 Nov 06:30:59,20 Nov 06:37:33,134:02:27,134:08:59,134:15:33,86.7,105,193,284,111,yes,"CSM alone, after first plane change"
+20 Nov 08:22:51,20 Nov 08:29:23,20 Nov 08:35:57,136:00:51,136:07:23,136:13:57,82.3,105,190,283,111,yes,"CSM alone, after first plane change"
+20 Nov 10:21:17,20 Nov 10:27:49,20 Nov 10:34:21,137:59:17,138:05:49,138:12:21,78.0,106,197,282,112,yes,"CSM alone, after first plane change"
+20 Nov 12:19:43,20 Nov 12:26:13,20 Nov 12:32:45,139:57:43,140:04:13,140:10:45,73.7,107,194,281,113,yes,"CSM alone, after first plane change"
+20 Nov 14:18:09,20 Nov 14:24:37,20 Nov 14:31:07,141:56:09,142:02:37,142:09:07,69.6,107,193,280,115,yes,"CSM alone, after first plane change"
+20 Nov 16:16:35,20 Nov 16:23:03,20 Nov 16:29:31,143:54:35,144:01:03,144:07:31,65.7,108,195,280,118,yes,"CSM alone, after first plane change"
+20 Nov 18:14:58,20 Nov 18:21:26,20 Nov 18:27:56,145:52:58,145:59:26,146:05:56,82.7,105,191,283,109,yes,CSM + LM ascent stage docked
+20 Nov 20:13:16,20 Nov 20:19:48,20 Nov 20:26:24,147:51:16,147:57:48,148:04:24,78.5,106,192,282,113,yes,CSM + LM ascent stage docked
+20 Nov 22:11:43,20 Nov 22:18:15,20 Nov 22:24:49,149:49:43,149:56:15,150:02:49,71.2,108,193,281,116,yes,CSM alone
+21 Nov 00:10:11,21 Nov 00:16:43,21 Nov 00:23:15,151:48:11,151:54:43,152:01:15,67.1,108,196,281,119,yes,CSM alone
+21 Nov 02:08:39,21 Nov 02:15:09,21 Nov 02:21:41,153:46:39,153:53:09,153:59:41,63.2,109,195,280,122,yes,CSM alone
+21 Nov 04:07:07,21 Nov 04:13:35,21 Nov 04:20:05,155:45:07,155:51:35,155:58:05,59.5,110,193,279,126,yes,CSM alone
+21 Nov 06:05:35,21 Nov 06:12:03,21 Nov 06:18:31,157:43:35,157:50:03,157:56:31,56.1,110,195,278,130,yes,CSM alone
+21 Nov 08:03:59,21 Nov 08:10:29,21 Nov 08:17:01,159:41:59,159:48:29,159:55:01,75.0,98,10,284,113,yes,"CSM alone, after second plane change"
+21 Nov 10:02:23,21 Nov 10:08:55,21 Nov 10:15:29,161:40:23,161:46:55,161:53:29,78.4,99,9,283,113,yes,"CSM alone, after second plane change"
+21 Nov 12:00:47,21 Nov 12:07:21,21 Nov 12:13:57,163:38:47,163:45:21,163:51:57,81.9,100,9,282,113,yes,"CSM alone, after second plane change"
+21 Nov 13:59:11,21 Nov 14:05:47,21 Nov 14:12:25,165:37:11,165:43:47,165:50:25,85.3,100,7,282,113,yes,"CSM alone, after second plane change"
+21 Nov 15:57:35,21 Nov 16:04:13,21 Nov 16:10:53,167:35:35,167:42:13,167:48:53,88.6,101,359,281,114,yes,"CSM alone, after second plane change"
+21 Nov 17:55:59,21 Nov 18:02:39,21 Nov 18:09:21,169:33:59,169:40:39,169:47:21,88.1,101,199,280,116,yes,"CSM alone, after second plane change"
+21 Nov 19:54:23,21 Nov 20:01:05,21 Nov 20:07:49,171:32:23,171:39:05,171:45:49,84.9,102,194,280,117,yes,"CSM alone, after second plane change"

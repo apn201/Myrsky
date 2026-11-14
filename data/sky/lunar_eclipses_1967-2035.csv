@@ -1,0 +1,158 @@
+greatest_eclipse_utc,lunar_eclipse_type,umbral_magnitude,penumbral_magnitude,penumbral_duration_min,partial_duration_min,total_duration_min,seen_from_the_moon,nasa_catalog_no
+1967-04-24 12:06:26,total,1.3356,2.2892,313.3,202.8,77.9,Earth covers the Sun completely (red ring) over the whole near side,09574
+1967-10-18 10:15:10,total,1.1426,2.2337,367.1,218.9,59.8,Earth covers the Sun completely (red ring) over the whole near side,09575
+1968-04-13 04:47:22,total,1.1116,2.0725,309.5,194.1,48.5,Earth covers the Sun completely (red ring) over the whole near side,09576
+1968-10-06 11:41:56,total,1.1691,2.2242,352.0,213.9,63.0,Earth covers the Sun completely (red ring) over the whole near side,09577
+1969-04-02 18:32:27,penumbral,-0.3047,0.7033,223.7,-,-,Earth covers part of the Sun for part or all of the near side,09578
+1969-08-27 10:47:35,penumbral,-0.9516,0.0131,31.3,-,-,Earth covers part of the Sun for part or all of the near side,09579
+1969-09-25 20:09:39,penumbral,-0.0953,0.9007,245.1,-,-,Earth covers part of the Sun for part or all of the near side,09580
+1970-02-21 08:30:03,partial,0.0463,1.1402,298.5,52.7,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09581
+1970-08-17 03:23:25,partial,0.4079,1.3521,270.6,131.3,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09582
+1971-02-10 07:44:40,total,1.3082,2.4026,369.5,224.7,82.2,Earth covers the Sun completely (red ring) over the whole near side,09583
+1971-08-06 19:43:10,total,1.7283,2.6958,327.3,215.5,99.4,Earth covers the Sun completely (red ring) over the whole near side,09584
+1972-01-30 10:53:23,total,1.0497,2.0987,340.3,203.4,34.8,Earth covers the Sun completely (red ring) over the whole near side,09585
+1972-07-26 07:15:39,partial,0.5427,1.5618,312.4,160.1,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09586
+1973-01-18 21:17:15,penumbral,-0.1293,0.8655,236.5,-,-,Earth covers part of the Sun for part or all of the near side,09587
+1973-06-15 20:49:57,penumbral,-0.602,0.4685,204.6,-,-,Earth covers part of the Sun for part or all of the near side,09588
+1973-07-15 11:38:35,penumbral,-0.9581,0.1046,99.1,-,-,Earth covers part of the Sun for part or all of the near side,09589
+1973-12-10 01:44:22,partial,0.1007,1.076,252.0,68.5,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09590
+1974-06-04 22:15:59,partial,0.8269,1.8752,341.0,193.6,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09591
+1974-11-29 15:13:22,total,1.2896,2.3057,333.1,208.9,75.7,Earth covers the Sun completely (red ring) over the whole near side,09592
+1975-05-25 05:48:01,total,1.4253,2.4218,335.9,215.2,88.3,Earth covers the Sun completely (red ring) over the whole near side,09593
+1975-11-18 22:23:26,total,1.0642,2.1352,352.1,209.0,40.2,Earth covers the Sun completely (red ring) over the whole near side,09594
+1976-05-13 19:54:21,partial,0.1217,1.0761,251.8,75.4,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09595
+1976-11-06 23:01:12,penumbral,-0.2594,0.8383,265.8,-,-,Earth covers part of the Sun for part or all of the near side,09596
+1977-04-04 04:18:16,partial,0.1928,1.1657,262.9,94.7,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09597
+1977-09-27 08:29:20,penumbral,-0.1361,0.9007,257.5,-,-,Earth covers part of the Sun for part or all of the near side,09598
+1978-03-24 16:22:22,total,1.4518,2.479,344.9,218.5,90.7,Earth covers the Sun completely (red ring) over the whole near side,09599
+1978-09-16 19:04:12,total,1.3268,2.306,323.8,207.2,78.6,Earth covers the Sun completely (red ring) over the whole near side,09600
+1979-03-13 21:08:02,partial,0.8538,1.935,350.6,197.7,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09601
+1979-09-06 10:54:12,total,1.0936,2.0421,305.1,191.9,44.4,Earth covers the Sun completely (red ring) over the whole near side,09602
+1980-03-01 20:45:12,penumbral,-0.4405,0.6545,238.5,-,-,Earth covers part of the Sun for part or all of the near side,09603
+1980-07-27 19:08:08,penumbral,-0.7264,0.2535,137.5,-,-,Earth covers part of the Sun for part or all of the near side,09604
+1980-08-26 03:30:29,penumbral,-0.2531,0.7089,214.4,-,-,Earth covers part of the Sun for part or all of the near side,09605
+1981-01-20 07:49:57,penumbral,-0.0192,1.0136,263.8,-,-,Earth covers part of the Sun for part or all of the near side,09606
+1981-07-17 04:46:48,partial,0.5486,1.5822,319.6,163.2,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09607
+1982-01-09 19:55:52,total,1.331,2.3147,319.1,203.8,77.7,Earth covers the Sun completely (red ring) over the whole near side,09608
+1982-07-06 07:30:54,total,1.7179,2.786,373.8,235.6,105.7,Earth covers the Sun completely (red ring) over the whole near side,09609
+1982-12-30 11:28:44,total,1.1822,2.1545,310.6,195.9,60.0,Earth covers the Sun completely (red ring) over the whole near side,09610
+1983-06-25 08:22:18,partial,0.3348,1.3901,314.7,134.6,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09611
+1983-12-20 01:49:03,penumbral,-0.1167,0.889,242.3,-,-,Earth covers part of the Sun for part or all of the near side,09612
+1984-05-15 04:40:09,penumbral,-0.176,0.8071,232.5,-,-,Earth covers part of the Sun for part or all of the near side,09613
+1984-06-13 14:25:45,penumbral,-0.9414,0.0647,73.0,-,-,Earth covers part of the Sun for part or all of the near side,09614
+1984-11-08 17:55:14,penumbral,-0.1825,0.8992,268.4,-,-,Earth covers part of the Sun for part or all of the near side,09615
+1985-05-04 19:56:24,total,1.2369,2.187,310.2,198.9,67.7,Earth covers the Sun completely (red ring) over the whole near side,09616
+1985-10-28 17:42:22,total,1.0736,2.1673,365.1,214.9,43.9,Earth covers the Sun completely (red ring) over the whole near side,09617
+1986-04-24 12:42:35,total,1.2022,2.162,312.6,198.8,63.6,Earth covers the Sun completely (red ring) over the whole near side,09618
+1986-10-17 19:17:59,total,1.2455,2.3008,353.2,216.8,73.7,Earth covers the Sun completely (red ring) over the whole near side,09619
+1987-04-14 02:18:55,penumbral,-0.2313,0.7769,234.1,-,-,Earth covers part of the Sun for part or all of the near side,09620
+1987-10-07 04:01:34,penumbral,-0.0096,0.9863,253.5,-,-,Earth covers part of the Sun for part or all of the near side,09621
+1988-03-03 16:12:45,penumbral,-0.0017,1.0907,293.8,-,-,Earth covers part of the Sun for part or all of the near side,09622
+1988-08-27 11:04:33,partial,0.2915,1.238,262.5,113.0,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09623
+1989-02-20 15:35:22,total,1.2747,2.3651,367.7,223.1,78.5,Earth covers the Sun completely (red ring) over the whole near side,09624
+1989-08-17 03:08:10,total,1.5984,2.5703,327.5,214.3,95.8,Earth covers the Sun completely (red ring) over the whole near side,09625
+1990-02-09 19:11:05,total,1.075,2.1191,339.6,204.3,42.3,Earth covers the Sun completely (red ring) over the whole near side,09626
+1990-08-06 14:12:19,partial,0.6766,1.7005,322.0,175.5,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09627
+1991-01-30 05:58:40,penumbral,-0.1106,0.8807,237.5,-,-,Earth covers part of the Sun for part or all of the near side,09628
+1991-06-27 03:14:43,penumbral,-0.7572,0.3126,169.5,-,-,Earth covers part of the Sun for part or all of the near side,09629
+1991-07-26 18:07:52,penumbral,-0.811,0.2542,152.7,-,-,Earth covers part of the Sun for part or all of the near side,09630
+1991-12-21 10:33:02,partial,0.0876,1.0651,251.5,64.1,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09631
+1992-06-15 04:56:58,partial,0.6822,1.7264,332.2,179.8,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09632
+1992-12-09 23:44:06,total,1.2709,2.2915,334.1,208.7,73.9,Earth covers the Sun completely (red ring) over the whole near side,09633
+1993-06-04 13:00:27,total,1.5617,2.5532,336.3,217.8,95.8,Earth covers the Sun completely (red ring) over the whole near side,09634
+1993-11-29 06:26:06,total,1.0876,2.1633,354.4,210.8,46.7,Earth covers the Sun completely (red ring) over the whole near side,09635
+1994-05-25 03:30:20,partial,0.2432,1.1941,261.2,104.6,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09636
+1994-11-18 06:43:53,penumbral,-0.2189,0.8815,271.6,-,-,Earth covers part of the Sun for part or all of the near side,09637
+1995-04-15 12:18:03,partial,0.1114,1.0836,256.3,73.0,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09638
+1995-10-08 16:04:11,penumbral,-0.2115,0.8252,247.6,-,-,Earth covers part of the Sun for part or all of the near side,09639
+1996-04-04 00:09:45,total,1.3795,2.4068,344.7,217.1,85.8,Earth covers the Sun completely (red ring) over the whole near side,09640
+1996-09-27 02:54:22,total,1.2395,2.2188,320.9,203.3,69.2,Earth covers the Sun completely (red ring) over the whole near side,09641
+1997-03-24 04:39:26,partial,0.9195,1.9994,353.9,203.1,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09642
+1997-09-16 18:46:39,total,1.1909,2.1417,308.2,196.4,61.5,Earth covers the Sun completely (red ring) over the whole near side,09643
+1998-03-13 04:20:05,penumbral,-0.3824,0.7086,246.4,-,-,Earth covers part of the Sun for part or all of the near side,09644
+1998-08-08 02:24:54,penumbral,-0.8637,0.1206,96.4,-,-,Earth covers part of the Sun for part or all of the near side,09645
+1998-09-06 11:10:08,penumbral,-0.1544,0.8121,227.8,-,-,Earth covers part of the Sun for part or all of the near side,09646
+1999-01-31 16:17:32,penumbral,-0.0258,1.0027,261.7,-,-,Earth covers part of the Sun for part or all of the near side,09647
+1999-07-28 11:33:42,partial,0.3966,1.4342,310.9,142.5,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09648
+2000-01-21 04:43:30,total,1.3246,2.306,318.2,203.3,77.0,Earth covers the Sun completely (red ring) over the whole near side,09649
+2000-07-16 13:55:35,total,1.7684,2.8375,374.4,236.0,106.4,Earth covers the Sun completely (red ring) over the whole near side,09650
+2001-01-09 20:20:36,total,1.1889,2.1618,311.0,196.3,61.0,Earth covers the Sun completely (red ring) over the whole near side,09651
+2001-07-05 14:55:19,partial,0.4947,1.5475,325.1,159.3,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09652
+2001-12-30 10:29:18,penumbral,-0.1155,0.8933,243.5,-,-,Earth covers part of the Sun for part or all of the near side,09653
+2002-05-26 12:03:22,penumbral,-0.2888,0.6893,216.6,-,-,Earth covers part of the Sun for part or all of the near side,09654
+2002-06-24 21:27:09,penumbral,-0.7925,0.2095,129.1,-,-,Earth covers part of the Sun for part or all of the near side,09655
+2002-11-20 01:46:36,penumbral,-0.2264,0.86,264.3,-,-,Earth covers part of the Sun for part or all of the near side,09656
+2003-05-16 03:40:09,total,1.1276,2.0747,306.5,193.9,51.4,Earth covers the Sun completely (red ring) over the whole near side,09657
+2003-11-09 01:18:34,total,1.0178,2.1139,363.2,211.4,22.0,Earth covers the Sun completely (red ring) over the whole near side,09658
+2004-05-04 20:30:12,total,1.3035,2.2627,315.7,203.2,75.5,Earth covers the Sun completely (red ring) over the whole near side,09659
+2004-10-28 03:04:06,total,1.3081,2.3637,353.8,218.7,80.5,Earth covers the Sun completely (red ring) over the whole near side,09660
+2005-04-24 09:54:50,penumbral,-0.1436,0.865,245.6,-,-,Earth covers part of the Sun for part or all of the near side,09661
+2005-10-17 12:03:22,partial,0.0625,1.0585,259.8,56.0,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09662
+2006-03-14 23:47:29,penumbral,-0.0604,1.03,287.5,-,-,Earth covers part of the Sun for part or all of the near side,09663
+2006-09-07 18:51:20,partial,0.1837,1.1329,254.4,91.1,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09664
+2007-03-03 23:20:54,total,1.2328,2.3188,365.4,221.1,73.4,Earth covers the Sun completely (red ring) over the whole near side,09665
+2007-08-28 10:37:21,total,1.4758,2.4526,327.3,212.2,90.0,Earth covers the Sun completely (red ring) over the whole near side,09666
+2008-02-21 03:26:03,total,1.1062,2.1451,339.0,205.4,49.8,Earth covers the Sun completely (red ring) over the whole near side,09667
+2008-08-16 21:10:06,partial,0.8076,1.8366,330.5,188.1,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09668
+2009-02-09 14:38:16,penumbral,-0.0882,0.8994,238.8,-,-,Earth covers part of the Sun for part or all of the near side,09669
+2009-07-07 09:38:37,penumbral,-0.9133,0.1562,121.5,-,-,Earth covers part of the Sun for part or all of the near side,09670
+2009-08-06 00:39:12,penumbral,-0.6661,0.4019,189.8,-,-,Earth covers part of the Sun for part or all of the near side,09671
+2009-12-31 19:22:39,partial,0.0763,1.0556,251.1,60.0,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09672
+2010-06-26 11:38:27,partial,0.5368,1.5773,322.1,162.9,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09673
+2010-12-21 08:16:57,total,1.2561,2.2807,335.1,208.7,72.3,Earth covers the Sun completely (red ring) over the whole near side,09674
+2011-06-15 20:12:36,total,1.6999,2.6868,336.1,219.3,100.2,Earth covers the Sun completely (red ring) over the whole near side,09675
+2011-12-10 14:31:48,total,1.1061,2.186,356.4,212.2,51.1,Earth covers the Sun completely (red ring) over the whole near side,09676
+2012-06-04 11:03:12,partial,0.3704,1.3183,270.0,126.6,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09677
+2012-11-28 14:32:59,penumbral,-0.1873,0.9155,276.0,-,-,Earth covers part of the Sun for part or all of the near side,09678
+2013-04-25 20:07:30,partial,0.0148,0.9866,247.7,27.0,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09679
+2013-05-25 04:09:58,penumbral,-0.9335,0.0157,33.6,-,-,Earth covers part of the Sun for part or all of the near side,09680
+2013-10-18 23:50:17,penumbral,-0.2718,0.7649,239.1,-,-,Earth covers part of the Sun for part or all of the near side,09681
+2014-04-15 07:45:39,total,1.2907,2.3182,343.9,214.7,77.8,Earth covers the Sun completely (red ring) over the whole near side,09682
+2014-10-08 10:54:35,total,1.1659,2.1456,318.1,199.5,58.8,Earth covers the Sun completely (red ring) over the whole near side,09683
+2015-04-04 12:00:15,total,1.0008,2.0792,357.5,209.0,4.7,Earth covers the Sun completely (red ring) over the whole near side,09684
+2015-09-28 02:47:08,total,1.2764,2.2296,310.7,199.9,71.9,Earth covers the Sun completely (red ring) over the whole near side,09685
+2016-03-23 11:47:11,penumbral,-0.3118,0.7747,255.4,-,-,Earth covers part of the Sun for part or all of the near side,09686
+2016-09-16 18:54:17,penumbral,-0.0635,0.908,239.3,-,-,Earth covers part of the Sun for part or all of the near side,09687
+2017-02-11 00:43:53,penumbral,-0.0354,0.9884,259.2,-,-,Earth covers part of the Sun for part or all of the near side,09688
+2017-08-07 18:20:28,partial,0.2464,1.2886,300.9,115.2,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09689
+2018-01-31 13:29:49,total,1.3155,2.2941,317.2,202.7,76.1,Earth covers the Sun completely (red ring) over the whole near side,09690
+2018-07-27 20:21:43,total,1.6087,2.6792,373.8,234.5,103.0,Earth covers the Sun completely (red ring) over the whole near side,09691
+2019-01-21 05:12:16,total,1.1953,2.1684,311.5,196.8,62.0,Earth covers the Sun completely (red ring) over the whole near side,09692
+2019-07-16 21:30:44,partial,0.6531,1.7037,333.7,177.9,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09693
+2020-01-10 19:09:59,penumbral,-0.116,0.8956,244.6,-,-,Earth covers part of the Sun for part or all of the near side,09694
+2020-06-05 19:25:02,penumbral,-0.4053,0.5683,198.2,-,-,Earth covers part of the Sun for part or all of the near side,09695
+2020-07-05 04:30:00,penumbral,-0.6436,0.3546,165.0,-,-,Earth covers part of the Sun for part or all of the near side,09696
+2020-11-30 09:42:49,penumbral,-0.262,0.8285,261.0,-,-,Earth covers part of the Sun for part or all of the near side,09697
+2021-05-26 11:18:41,total,1.0095,1.954,302.0,187.4,14.5,Earth covers the Sun completely (red ring) over the whole near side,09698
+2021-11-19 09:02:53,partial,0.9742,2.072,361.5,208.4,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09699
+2022-05-16 04:11:29,total,1.4137,2.3726,318.7,207.2,84.9,Earth covers the Sun completely (red ring) over the whole near side,09700
+2022-11-08 10:59:09,total,1.3589,2.4143,353.9,219.8,85.0,Earth covers the Sun completely (red ring) over the whole near side,09701
+2023-05-05 17:22:52,penumbral,-0.0457,0.9636,257.5,-,-,Earth covers part of the Sun for part or all of the near side,09702
+2023-10-28 20:14:04,partial,0.122,1.1181,264.6,77.4,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09703
+2024-03-25 07:12:45,penumbral,-0.1325,0.9557,279.1,-,-,Earth covers part of the Sun for part or all of the near side,09704
+2024-09-18 02:44:11,partial,0.0848,1.0372,246.3,62.8,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09705
+2025-03-14 06:58:41,total,1.1784,2.2595,362.6,218.3,65.4,Earth covers the Sun completely (red ring) over the whole near side,09706
+2025-09-07 18:11:43,total,1.3619,2.344,326.7,209.4,82.1,Earth covers the Sun completely (red ring) over the whole near side,09707
+2026-03-03 11:33:37,total,1.1507,2.1838,338.6,207.2,58.3,Earth covers the Sun completely (red ring) over the whole near side,09708
+2026-08-28 04:12:49,partial,0.9299,1.9645,337.8,198.1,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09709
+2027-02-20 23:12:50,penumbral,-0.0569,0.9266,241.0,-,-,Earth covers part of the Sun for part or all of the near side,09710
+2027-07-18 16:02:53,penumbral,-1.068,0.0014,11.8,-,-,Earth covers part of the Sun for part or all of the near side,09711
+2027-08-17 07:13:43,penumbral,-0.5254,0.5456,218.6,-,-,Earth covers part of the Sun for part or all of the near side,09712
+2028-01-12 04:12:57,partial,0.0662,1.0468,250.7,56.0,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09713
+2028-07-06 18:19:40,partial,0.3892,1.4266,310.6,141.5,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09714
+2028-12-31 16:51:58,total,1.2463,2.2742,336.2,208.8,71.3,Earth covers the Sun completely (red ring) over the whole near side,09715
+2029-06-26 03:22:05,total,1.8436,2.8266,335.1,219.5,101.9,Earth covers the Sun completely (red ring) over the whole near side,09716
+2029-12-20 22:41:54,total,1.1174,2.2008,358.0,213.3,53.7,Earth covers the Sun completely (red ring) over the whole near side,09717
+2030-06-15 18:33:16,partial,0.5025,1.448,278.2,144.4,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09718
+2030-12-09 22:27:33,penumbral,-0.1628,0.9416,279.2,-,-,Earth covers part of the Sun for part or all of the near side,09719
+2031-05-07 03:50:44,penumbral,-0.0904,0.8814,237.3,-,-,Earth covers part of the Sun for part or all of the near side,09720
+2031-06-05 11:43:59,penumbral,-0.8199,0.1292,95.6,-,-,Earth covers part of the Sun for part or all of the near side,09721
+2031-10-30 07:45:26,penumbral,-0.3204,0.7161,231.8,-,-,Earth covers part of the Sun for part or all of the near side,09722
+2032-04-25 15:13:32,total,1.1913,2.2192,342.4,211.2,65.5,Earth covers the Sun completely (red ring) over the whole near side,09723
+2032-10-18 19:02:21,total,1.1028,2.083,315.4,195.9,47.1,Earth covers the Sun completely (red ring) over the whole near side,09724
+2033-04-14 19:12:31,total,1.0944,2.1711,361.2,215.0,49.2,Earth covers the Sun completely (red ring) over the whole near side,09725
+2033-10-08 10:55:03,total,1.3497,2.3057,312.6,202.4,78.8,Earth covers the Sun completely (red ring) over the whole near side,09726
+2034-04-03 19:05:39,penumbral,-0.2274,0.8545,265.4,-,-,Earth covers part of the Sun for part or all of the near side,09727
+2034-09-28 02:46:16,partial,0.0144,0.9911,248.7,26.7,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09728
+2035-02-22 09:04:51,penumbral,-0.0535,0.9652,255.7,-,-,Earth covers part of the Sun for part or all of the near side,09729
+2035-08-19 01:10:54,partial,0.1037,1.1507,289.8,76.5,-,"Earth covers the Sun completely for part of the near side, partly elsewhere",09730

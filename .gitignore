@@ -1,0 +1,23 @@
+# Large downloaded source data. Listed with URLs in data/SOURCES.md; re-download to run tools/prepare.py.
+data/lroc/*.IMG
+data/lroc/*.TIF
+data/lroc/*.glb
+data/3d/
+data/docs/
+data/rocks/
+data/photos/**/*.jpg
+data/positions/*.ZIP
+data/positions/*.pdf
+data/positions/shapefile_360/
+# third-party maps, reference only, not ours to publish
+data/positions/reference/
+data/stars/bsc5_catalog.gz
+data/seismic/*.mseed
+
+# local tooling
+.claude/
+__pycache__/
+*.pyc
+node_modules/
+.DS_Store
+Thumbs.db

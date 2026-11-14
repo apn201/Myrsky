@@ -1,0 +1,140 @@
+"""CSM passes over the Apollo 12 site.
+
+Positions only, from Mission Report MSC-01855 table 5-III (lunar orbit phase).
+Between two manoeuvres the CSM coasts. Two table positions on the same coast
+fix the orbit plane and the mean angular rate (whole revolutions counted from
+the period). Orbit treated as circular; altitude interpolated.
+Moon-fixed frame rotates at the sidereal rate relative to inertial space.
+"""
+import math, sys, csv
+import numpy as np
+from datetime import datetime, timedelta
+
+MU = 4902.800
+R_SITE = 1735.978
+NM = 1.852
+W = 2 * math.pi / (27.321661 * 86400)
+LAUNCH = datetime(1969, 11, 14, 16, 22, 0)
+T_REF = 110 * 3600 + 32 * 60 + 36.2  # landing; inertial frame = Moon-fixed axes at this instant
+
+def get(s):
+    h, m, x = s.split(":"); return int(h) * 3600 + int(m) * 60 + float(x)
+def utc(t): return (LAUNCH + timedelta(seconds=round(t))).strftime("%d %b %H:%M:%S")
+def met(t):
+    t = round(t); return "%d:%02d:%02d" % (t // 3600, t % 3600 // 60, t % 60)
+def sgn(s): return float(s[:-1]) * (1 if s[-1] in "NE" else -1)
+def unit(la, lo):
+    la, lo = math.radians(la), math.radians(lo)
+    return np.array([math.cos(la) * math.cos(lo), math.cos(la) * math.sin(lo), math.sin(la)])
+def rot_z(v, a):
+    c, s = math.cos(a), math.sin(a)
+    return np.array([c * v[0] - s * v[1], s * v[0] + c * v[1], v[2]])
+def to_inertial(u_fixed, t): return rot_z(u_fixed, W * (t - T_REF))
+def to_fixed(u_in, t): return rot_z(u_in, -W * (t - T_REF))
+
+P = {  # name: time, lat, lon, alt nmi
+    "circ_off": ("87:49:05", "1.89S", "150.85E", 61.7),
+    "undock": ("107:54:02.3", "13.52S", "86.96E", 63.0),
+    "sep_ign": ("108:24:36.8", "6.61S", "7.44W", 59.2),
+    "sep_off": ("108:24:51.2", "6.45S", "8.14W", 59.2),
+    "pc1": ("119:47:13.2", "14.01S", "77.66E", 62.2),
+    "dock": ("145:36:20.2", "14.53S", "46.98E", 58.1),
+    "as_sep": ("148:04:30.9", "1.40N", "43.34W", 59.9),
+    "pc2_ign": ("159:04:45.5", "6.65S", "110.34E", 58.7),
+    "pc2_off": ("159:05:04.8", "6.82S", "109.40E", 58.9),
+    "tei_ign": ("172:27:16.8", "8.74N", "170.25W", 63.3),
+}
+
+class Seg:
+    def __init__(self, a, b, label, mid=None):
+        self.label = label
+        ta, la, lo, ha = P[a]; tb, lb, lob, hb = P[b]
+        self.t0, self.t1 = get(ta), get(tb)
+        self.h0, self.h1 = ha * NM, hb * NM
+        r0 = to_inertial(unit(sgn(la), sgn(lo)), self.t0)
+        r1 = to_inertial(unit(sgn(lb), sgn(lob)), self.t1)
+        n = np.cross(r0, r1); n /= np.linalg.norm(n)
+        if n[2] > 0:  # Apollo lunar orbits are retrograde: angular momentum points south
+            n = -n
+        self.n, self.u0 = n, r0
+        th = math.atan2(np.dot(np.cross(r0, r1), n), np.dot(r0, r1)) % (2 * math.pi)
+        a_km = R_SITE + (self.h0 + self.h1) / 2
+        p_est = 2 * math.pi * math.sqrt(a_km ** 3 / MU)
+        k = round(((self.t1 - self.t0) / p_est * 2 * math.pi - th) / (2 * math.pi))
+        self.rate = (th + 2 * math.pi * k) / (self.t1 - self.t0)
+        self.period = 2 * math.pi / self.rate
+        incl = math.degrees(math.acos(abs(n[2])))
+        print(f"{label}: {met(self.t0)}-{met(self.t1)}, {k} revs + {math.degrees(th):.1f} deg, period {self.period/60:.2f} min (two-body {p_est/60:.2f}), inclination to lunar equator {incl:.2f} deg")
+
+    def pos_fixed(self, t):
+        ang = self.rate * (t - self.t0)
+        u = self.u0 * math.cos(ang) + np.cross(self.n, self.u0) * math.sin(ang)
+        f = (t - self.t0) / (self.t1 - self.t0)
+        r = R_SITE + self.h0 + (self.h1 - self.h0) * f
+        return to_fixed(u, t) * r
+
+SEGS = [
+    Seg("circ_off", "sep_ign", "CSM + LM docked (Intrepid undocks 107:54, separates 108:24)"),
+    Seg("sep_off", "pc1", "CSM alone"),
+    Seg("pc1", "dock", "CSM alone, after first plane change"),
+    Seg("dock", "as_sep", "CSM + LM ascent stage docked"),
+    Seg("as_sep", "pc2_ign", "CSM alone"),
+    Seg("pc2_off", "tei_ign", "CSM alone, after second plane change"),
+]
+
+SITE_LAT, SITE_LON = -3.0128, -23.4219
+site_u = unit(SITE_LAT, SITE_LON)
+site = site_u * R_SITE
+east = np.array([-math.sin(math.radians(SITE_LON)), math.cos(math.radians(SITE_LON)), 0.0])
+north = np.cross(site_u, east)
+
+# Sun: subsolar point from Sun elevation 5.1 deg in the east at touchdown; moves west 12.19 deg/day
+SUB_LON0 = SITE_LON + 90 - 5.1
+def sun_fixed(t):
+    lon_s = SUB_LON0 - 360 / 29.530589 * (t - T_REF) / 86400
+    return unit(0.0, lon_s)
+
+def look(rf):
+    d = rf - site
+    rng = np.linalg.norm(d)
+    el = math.degrees(math.asin(np.dot(d, site_u) / rng))
+    az = math.degrees(math.atan2(np.dot(d, east), np.dot(d, north))) % 360
+    return el, az, rng
+
+def sunlit(rf, t):
+    s = sun_fixed(t)
+    if np.dot(rf, s) > 0:
+        return True
+    return np.linalg.norm(rf - np.dot(rf, s) * s) > 1737.4
+
+rows = []
+for sg in SEGS:
+    t = sg.t0; above = False; cur = None
+    while t <= sg.t1:
+        rf = sg.pos_fixed(t)
+        el, az, rng = look(rf)
+        if el > 0 and not above:
+            above = True; cur = {"seg": sg.label, "rise": t, "rise_az": az, "max_el": el, "t_max": t, "az_max": az, "rng_min": rng, "lit_all": sunlit(rf, t), "lit_any": sunlit(rf, t)}
+        if el > 0 and above:
+            if el > cur["max_el"]:
+                cur.update(max_el=el, t_max=t, az_max=az, rng_min=rng)
+            lit = sunlit(rf, t); cur["lit_all"] &= lit; cur["lit_any"] |= lit
+        if el <= 0 and above:
+            above = False; cur["set"] = t; cur["set_az"] = az; rows.append(cur)
+        t += 2.0
+    if above:
+        cur["set"] = sg.t1; cur["set_az"] = float("nan"); cur["seg"] += " (cut by manoeuvre)"; rows.append(cur)
+
+print()
+print("| Rise UTC | Highest UTC | Set UTC | Mission time (highest) | Max elevation | Direction at highest | Closest km | Sunlit | Vehicles |")
+print("|---|---|---|---|---|---|---|---|---|")
+out = []
+for r in rows:
+    lit = "yes" if r["lit_all"] else ("partly" if r["lit_any"] else "no")
+    print(f"| {utc(r['rise'])} | {utc(r['t_max'])} | {utc(r['set'])} | {met(r['t_max'])} | {r['max_el']:.1f} | az {r['az_max']:.0f} | {r['rng_min']:.0f} | {lit} | {r['seg']} |")
+    out.append([utc(r['rise']), utc(r['t_max']), utc(r['set']), met(r['rise']), met(r['t_max']), met(r['set']), round(r['max_el'], 1), round(r['rise_az']), round(r['az_max']), round(r['set_az']) if r['set_az'] == r['set_az'] else "", round(r['rng_min']), lit, r['seg']])
+if len(sys.argv) > 1:
+    with open(sys.argv[1], "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["rise_utc_1969", "highest_utc_1969", "set_utc_1969", "rise_met", "highest_met", "set_met", "max_elevation_deg", "rise_azimuth_deg", "highest_azimuth_deg", "set_azimuth_deg", "closest_km", "sunlit", "vehicles"])
+        w.writerows(out)

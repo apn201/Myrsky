@@ -1,0 +1,12 @@
+{
+  "source": "SLDEM2015 512 ppd, tile SLDEM2015_512_30S_00S_315_360_FLOAT, rows 1158-1925, cols 10664-11431 (0-based)",
+  "units": "metres relative to sphere radius 1737400 m",
+  "projection": "simple cylindrical, 512 pixels per degree, pixel registered",
+  "width": 768,
+  "height": 768,
+  "lat_top_edge": -2.26171875,
+  "lat_bottom_edge": -3.76171875,
+  "lon_left_edge": 335.828125,
+  "lon_right_edge": 337.328125,
+  "pixel_size_m_ns": 59.225293797166955
+}

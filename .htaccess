@@ -1,0 +1,23 @@
+# Webcam: Ocean of Storms - Apache settings (needs AllowOverride FileInfo Indexes or the same lines in the vhost)
+Options -Indexes
+
+<IfModule mod_mime.c>
+  AddType application/wasm .wasm
+  AddType model/gltf-binary .glb
+  AddType application/octet-stream .i16
+  AddType text/javascript .js .mjs
+  AddType application/json .json
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/javascript application/json application/wasm application/octet-stream model/gltf-binary
+</IfModule>
+
+<IfModule mod_headers.c>
+  <FilesMatch "\.(jpg|png|glb|i16|wasm)$">
+    Header set Cache-Control "public, max-age=604800"
+  </FilesMatch>
+  <FilesMatch "\.(html|js|css|json)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>

@@ -218,6 +218,8 @@ function applyTime(t) {
   earthLight.intensity = physEarth * S;
   // irradiance on a downward-facing surface from ground of albedo 0.11 lit at elevation e: E sin(e) A
   bounce.intensity = (physSun * Math.max(0, s.sun[2]) + physEarth * Math.max(0, s.earth[2])) * 0.11 * S;
+  // foil and panels reflect the sunlit ground: radiance of albedo-0.11 ground, E sin(e) A / pi
+  models.lm.setEnv((physSun * Math.max(0, s.sun[2]) + physEarth * Math.max(0, s.earth[2])) * 0.11 / Math.PI * S * 2.6); // env ground is 0.5 linear; x1.3 for the lunar photometric brightening
   ambient.intensity = physSun * Math.max(0, s.sun[2]) * 0.11 * 0.03 * S; // light scattered from distant slopes into shadows
   earthLight.position.copy(camPos).addScaledVector(earthW, 1000); earthLight.target.position.copy(camPos);
   terrainMat.userData.uniforms.sunDirW.value.copy(sunW);

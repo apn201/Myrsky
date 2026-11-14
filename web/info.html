@@ -76,6 +76,9 @@ The visitor counter
 <p>Shadows are cast from the real Sun direction over the real ground shape. For each point of ground the page marches toward the Sun across the height map and checks whether a hill or crater rim is in the way. Near landing time the Sun is so low that the crater fills with shadow.</p>
 <p>Try the <b>Shadows</b> layer. <span class="show"><a href="index.html?jump=touchdown&layers=-shadows">[shadows off at touchdown]</a></span></p>
 
+<h2>Why does the ground look like that?</h2>
+<p>Moon dust does not scatter light like paint or sand. It throws light back toward the Sun, so ground seen with the Sun behind you looks bright and flat, and ground seen toward the Sun looks dark. The page uses the lunar photometric function measured from orbit (McEwen's Lunar-Lambert model with an opposition surge), not ordinary computer-graphics lighting. The ground's brightness pattern is the real one, from the orbiter photo, with an average albedo of 0.11.</p>
+
 <h2>Why is the sky black in daytime?</h2>
 <p>There is no air to scatter sunlight, so the sky stays black even at noon. You still cannot see stars in daylight: the ground is so bright that the camera's exposure is far too short for them. At night the camera turns its gain up, the stars come out, and the picture gets grainier.</p>
 
@@ -100,7 +103,8 @@ The visitor counter
 <li>LROC NAC digital terrain model and orthophotos of the Apollo 12 site, product NAC_DTM_APOLLO12 (NASA/GSFC/Arizona State University). Henriksen et al. (2017), Icarus 283.</li>
 <li>LROC coordinates of anthropogenic objects on the Moon (NASA/GSFC/ASU). Wagner et al. (2017), Icarus 283, 92-103.</li>
 <li>SLDEM2015 lunar elevation model (LOLA + Kaguya TC), NASA PDS Geosciences Node.</li>
-<li>NASA 3D Resources: "Apollo Lunar Module" model.</li>
+<li>NASA 3D Resources: "Apollo Lunar Module" model. Its foil and panel surfaces use crops of the crew's own photo AS12-47-6988 (NASA), taken near CAM 1's spot.</li>
+<li>Apollo 12 surface photographs (NASA, via the Apollo Lunar Surface Journal image library): reference for colours, the S-band dish fabric, and the camera's glare.</li>
 <li>NASA Space Science Data Coordinated Archive (NSSDCA): Apollo 12 LM, ALSEP, Surveyor 3 entries.</li>
 <li>Apollo 12 Mission Report (MSC-01855), Apollo 12 Press Kit, Apollo 12 Preliminary Science Report (NASA SP-235), ALSEP Flight System Familiarization Manual (1969), Surveyor III Mission Report (JPL TR 32-1177), Surveyor 3 Preliminary Science Results (JPL PD 125), Surveyor Program Results (NASA SP-184).</li>
 <li>NASA Blue Marble (2002) Earth image, NASA Earth Observatory / GSFC.</li>

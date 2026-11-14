@@ -43,11 +43,50 @@ function foilNormalMap() {
   const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(3, 3); return t;
 }
 
+// Real-photo surface textures, mapped in world space (the NASA model has no useful UVs).
+// Crops of Apollo 12 frame AS12-47-6988 (NASA): descent-stage foil and ascent-stage panels.
+function triplanar(mat, tex, scale, gain = 1) {
+  mat.userData.tri = { value: tex };
+  mat.onBeforeCompile = (sh) => {
+    sh.uniforms.tTri = mat.userData.tri;
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', `#include <common>
+varying vec3 vWP; varying vec3 vWN;`)
+      .replace('#include <worldpos_vertex>', `#include <worldpos_vertex>
+vWP = (modelMatrix * vec4(transformed, 1.0)).xyz; vWN = normalize(mat3(modelMatrix) * objectNormal);`);
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+varying vec3 vWP; varying vec3 vWN; uniform sampler2D tTri;`)
+      .replace('#include <map_fragment>', `
+      vec3 bw = pow(abs(normalize(vWN)), vec3(4.0)); bw /= (bw.x + bw.y + bw.z);
+      vec3 tc = texture2D(tTri, vWP.zy * ${(1 / scale).toFixed(3)}).rgb * bw.x + texture2D(tTri, vWP.xz * ${(1 / scale).toFixed(3)}).rgb * bw.y + texture2D(tTri, vWP.xy * ${(1 / scale).toFixed(3)}).rgb * bw.z;
+      diffuseColor.rgb *= pow(tc, vec3(2.2)) * ${gain.toFixed(2)};`);
+  };
+  mat.customProgramCacheKey = () => 'tri' + scale + '-' + gain;
+  return mat;
+}
+// environment for reflections: black sky, sunlit grey ground below the horizon. Intensity set per frame.
+function groundEnv() {
+  const c = document.createElement('canvas'); c.width = 128; c.height = 64; const g = c.getContext('2d');
+  const gr = g.createLinearGradient(0, 0, 0, 64);
+  gr.addColorStop(0, '#000'); gr.addColorStop(0.49, '#000'); gr.addColorStop(0.52, '#bbb'); gr.addColorStop(1, '#888');
+  g.fillStyle = gr; g.fillRect(0, 0, 128, 64);
+  const t = new THREE.CanvasTexture(c); t.mapping = THREE.EquirectangularReflectionMapping; return t;
+}
+
 export async function loadLM() {
   const draco = new DRACOLoader().setDecoderPath('vendor/draco/');
-  const gltf = await new GLTFLoader().setDRACOLoader(draco).loadAsync('assets/lm_nasa.glb');
-  const root = gltf.scene;
+  const tl = new THREE.TextureLoader();
+  const [gltf, tFoil, tPanel] = await Promise.all([
+    new GLTFLoader().setDRACOLoader(draco).loadAsync('assets/lm_nasa.glb'),
+    tl.loadAsync('assets/tex_foil_AS12-47-6988.jpg'), tl.loadAsync('assets/tex_panel_AS12-47-6988.jpg'),
+  ]);
+  for (const t of [tFoil, tPanel]) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.NoColorSpace; }
+  const env = groundEnv();
   const foilN = foilNormalMap();
+  const foil = triplanar(new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.85, roughness: 0.32, envMap: env, normalMap: foilN, normalScale: new THREE.Vector2(0.9, 0.9), side: THREE.DoubleSide }), tFoil, 0.8, 1.3);
+  const panel = triplanar(new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.35, roughness: 0.5, envMap: env, side: THREE.DoubleSide }), tPanel, 1.1, 0.75);
+  const black = new THREE.MeshStandardMaterial({ color: 0x141414, metalness: 0.3, roughness: 0.45, envMap: env, side: THREE.DoubleSide });
+  const grey = new THREE.MeshStandardMaterial({ color: 0x5a5a5a, metalness: 0.6, roughness: 0.4, envMap: env, side: THREE.DoubleSide });
+  const root = gltf.scene;
   const ascent = new THREE.Group(), descent = new THREE.Group();
   const meshes = [];
   root.updateMatrixWorld(true);
@@ -56,15 +95,13 @@ export async function loadLM() {
     m.geometry.computeBoundingBox();
     const bb = m.geometry.boundingBox.clone().applyMatrix4(m.matrixWorld);
     const isAscent = bb.min.y > 2.18 && bb.max.y > 2.55 || bb.min.y > 2.43;
-    const mat = m.material.clone();
-    mat.transparent = false; mat.opacity = 1; mat.side = THREE.DoubleSide; mat.alphaTest = 0;
-    const col = mat.color;
-    if (col && col.r > 0.6 && col.g < 0.6 && col.b < 0.2) { // gold-yellow foil
-      mat.color = new THREE.Color(0xc89632); mat.metalness = 0.45; mat.roughness = 0.45; mat.normalMap = foilN; mat.normalScale = new THREE.Vector2(0.6, 0.6);
-    } else if (col && col.r > 0.55 && Math.abs(col.r - col.b) < 0.05) { // grey/silver: ascent stage panels are grey, not white
-      mat.color.multiplyScalar(0.62); mat.metalness = 0.55; mat.roughness = 0.5;
-    } else { mat.roughness = Math.max(mat.roughness ?? 0.6, 0.5); }
-    m.material = mat;
+    const c = m.material.color || new THREE.Color(1, 1, 1);
+    let mat;
+    if (m.material.map) { mat = m.material.clone(); mat.envMap = env; mat.roughness = 0.5; }
+    else if (c.r > 0.5 && c.b < 0.25) mat = foil;                                // gold, orange, pale-yellow foil
+    else if (c.r > 0.55 && Math.abs(c.r - c.b) < 0.08) mat = isAscent ? panel : foil; // light panels (silver on the descent stage)
+    else if (c.r < 0.12) mat = black;
+    else mat = isAscent ? panel : grey;
     const clone = new THREE.Mesh(m.geometry, mat);
     clone.applyMatrix4(m.matrixWorld);
     (isAscent ? ascent : descent).add(clone);
@@ -75,7 +112,8 @@ export async function loadLM() {
   lm.rotation.y = -90 * D2R; // model +z (ladder) faces west
   lm.position.copy(ground('lm', -0.15));
   shadowAll(lm);
-  return { lm, ascent, descent };
+  const envMats = [foil, panel, black, grey];
+  return { lm, ascent, descent, setEnv(i) { for (const mm of envMats) mm.envMapIntensity = i; } };
 }
 
 export function buildSurveyor() {
@@ -173,7 +211,7 @@ export function buildDish() {
   const g = new THREE.Group();
   const metal = std(0xcfcfcf, 0.45, 0.7);
   // erectable S-band dish: white-pink fabric on 16 dark ribs (crew photo AS12-46-6739)
-  const fabric = new THREE.MeshStandardMaterial({ color: 0xe9dcd6, roughness: 0.7, metalness: 0.0, side: THREE.DoubleSide, transparent: true, opacity: 0.88 });
+  const fabric = new THREE.MeshStandardMaterial({ color: 0xd9a888, roughness: 0.75, metalness: 0.0, side: THREE.DoubleSide, transparent: true, opacity: 0.9 }); // salmon fabric, AS12-47-6988
   const ribMat = std(0x3a3632, 0.6, 0.3);
   const upright = new THREE.Group();
   for (let i = 0; i < 3; i++) { const a = i * 2.094; upright.add(rod(new THREE.Vector3(Math.cos(a) * 0.9, 0, Math.sin(a) * 0.9), new THREE.Vector3(0, 1.8, 0), 0.015, metal)); }
@@ -184,8 +222,10 @@ export function buildDish() {
     const a = i * Math.PI / 8; let prev = new THREE.Vector3(0, 0, 0);
     for (let k = 1; k <= 6; k++) { const r = 1.5 * k / 6; const p = new THREE.Vector3(Math.cos(a) * r, r * r / (4 * 1.3) + 0.004, Math.sin(a) * r); head.add(rod(prev, p, 0.008, ribMat)); prev = p; }
   }
-  head.add(rod(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0.75, 0), 0.012, metal));
-  const feedBox = box(0.08, 0.08, 0.08, metal); feedBox.position.y = 0.78; head.add(feedBox);
+  head.add(rod(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1.45, 0), 0.014, metal)); // feed mast
+  const band = std(0xc8783a, 0.6, 0.2);
+  head.add(at(cyl(0.022, 0.022, 0.12, band, 8), 0, 0.55, 0)); head.add(at(cyl(0.022, 0.022, 0.1, band, 8), 0, 1.3, 0));
+  head.add(at(cyl(0.035, 0.05, 0.08, metal, 10), 0, 1.5, 0));
   upright.add(head);
   g.add(upright);
   g.position.copy(ground('sband'));

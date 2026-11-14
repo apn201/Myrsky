@@ -165,7 +165,7 @@ export function buildFlag() {
   const cloth = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: flagTexture(), roughness: 0.85, side: THREE.DoubleSide }));
   cloth.position.set(0.02, poleH - 0.04 - 0.455, 0); g.add(cloth);
   g.position.copy(ground('flag', -0.3));
-  g.rotation.y = -60 * D2R; // cloth faces roughly east-north-east (orientation approximate)
+  g.rotation.y = 120 * D2R; // front of the cloth toward CAM 1 (real orientation approximate)
   return shadowAll(g);
 }
 

@@ -280,7 +280,30 @@ export function buildSWC() {
   return { group: shadowAll(g), foil };
 }
 
-export function buildALSEP() {
+// dust and handling marks on hardware: the soil photo's grain, laid on in world space, gently
+function dusty(root, grain, amount = 0.35) {
+  if (!grain) return root;
+  const done = new Set();
+  root.traverse((c) => {
+    if (!c.isMesh || done.has(c.material)) return;
+    const mat = c.material; done.add(mat);
+    mat.onBeforeCompile = (sh) => {
+      sh.uniforms.tGrain = { value: grain };
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', `#include <common>
+varying vec3 vDW; varying vec3 vDN;`).replace('#include <worldpos_vertex>', `#include <worldpos_vertex>
+vDW = (modelMatrix * vec4(transformed, 1.0)).xyz; vDN = normalize(mat3(modelMatrix) * objectNormal);`);
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+uniform sampler2D tGrain; varying vec3 vDW; varying vec3 vDN;`).replace('#include <map_fragment>', `#include <map_fragment>
+          vec3 bw = pow(abs(vDN), vec3(4.0)); bw /= bw.x + bw.y + bw.z;
+          float gr = texture2D(tGrain, vDW.zy / 0.3).r * bw.x + texture2D(tGrain, vDW.xz / 0.3).r * bw.y + texture2D(tGrain, vDW.xy / 0.3).r * bw.z;
+          diffuseColor.rgb *= 1.0 + ${amount.toFixed(2)} * (gr * 1.99 - 1.0) - 0.12 * smoothstep(0.55, 0.85, gr);`);
+    };
+    mat.customProgramCacheKey = () => 'hw-dust-v1';
+  });
+  return root;
+}
+
+export function buildALSEP(grain = null) {
   const g = new THREE.Group();
   const gold = std(0xb8913a, 0.45, 0.7), silver = std(0xd8d8d8, 0.35, 0.8), white = std(0xb8b8b2, 0.6), dark = std(0x2a2a2a, 0.6, 0.3);
   const place = (id, obj, du = 0) => { obj.position.copy(ground(id, du)); g.add(obj); return obj; };
@@ -303,22 +326,40 @@ export function buildALSEP() {
   pse.add(at(new THREE.Mesh(new THREE.CircleGeometry(0.75, 24), std(0xcfcfcf, 0.3, 0.8)), 0, 0.02, 0, -Math.PI / 2, 0, 0));
   pse.add(at(cyl(0.12, 0.14, 0.32, silver, 16), 0, 0.18, 0));
   place('alsep_pse', pse);
-  // magnetometer: three 1 m arms with sensor heads, ~1 m tall
+  // magnetometer (AS12-47-6921): low body on three short legs, three ~1 m booms angled up, fat sensor heads on the ends
   const lsm = new THREE.Group();
-  lsm.add(at(box(0.24, 0.13, 0.27, white), 0, 0.5, 0));
-  for (let i = 0; i < 3; i++) { const a = i * 2.094; const tip = new THREE.Vector3(Math.cos(a) * 0.76, 0.95, Math.sin(a) * 0.76); lsm.add(rod(new THREE.Vector3(0, 0.6, 0), tip, 0.012, white)); const s = cyl(0.04, 0.04, 0.12, white, 8); s.position.copy(tip); lsm.add(s); lsm.add(rod(tip, tip.clone().setY(0), 0.008, white)); }
+  lsm.add(at(box(0.24, 0.13, 0.27, white), 0, 0.3, 0));
+  for (let i = 0; i < 3; i++) {
+    const a = i * 2.094 + 0.5, c = Math.cos(a), sn = Math.sin(a);
+    const root = new THREE.Vector3(c * 0.08, 0.36, sn * 0.08), tip = new THREE.Vector3(c * 0.85, 0.78, sn * 0.85);
+    lsm.add(rod(root, tip, 0.014, silver));
+    const dir = tip.clone().sub(root).normalize();
+    lsm.add(rod(tip.clone().addScaledVector(dir, -0.04), tip.clone().addScaledVector(dir, 0.17), 0.045, white));
+    const la = a + 1.047;
+    lsm.add(rod(new THREE.Vector3(Math.cos(la) * 0.1, 0.25, Math.sin(la) * 0.1), new THREE.Vector3(Math.cos(la) * 0.3, 0, Math.sin(la) * 0.3), 0.01, silver));
+  }
   place('alsep_lsm', lsm);
-  // solar wind spectrometer
-  const sws = new THREE.Group(); sws.add(at(box(0.28, 0.2, 0.28, white), 0, 0.25, 0));
-  for (const [x, z] of [[-0.12, -0.12], [0.12, -0.12], [-0.12, 0.12], [0.12, 0.12]]) sws.add(rod(new THREE.Vector3(x, 0.15, z), new THREE.Vector3(x * 1.4, 0, z * 1.4), 0.008, white));
+  // solar wind spectrometer (AS12-46-6812): box with dark radiator sides, faceted dome of sensor cups, short legs
+  const sws = new THREE.Group();
+  sws.add(at(box(0.3, 0.2, 0.3, white), 0, 0.24, 0));
+  for (const [x, z, ry] of [[0, 0.151, 0], [0, -0.151, 0], [0.151, 0, Math.PI / 2], [-0.151, 0, Math.PI / 2]]) sws.add(at(box(0.24, 0.12, 0.004, dark), x, 0.22, z, 0, ry, 0));
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 3, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0xc8c8c4, roughness: 0.45, metalness: 0.5, flatShading: true }));
+  dome.scale.y = 0.75; sws.add(at(dome, 0, 0.34, 0));
+  for (const [x, z] of [[-0.12, -0.12], [0.12, -0.12], [-0.12, 0.12], [0.12, 0.12]]) sws.add(rod(new THREE.Vector3(x, 0.15, z), new THREE.Vector3(x * 1.5, 0, z * 1.5), 0.009, silver));
   place('alsep_sws', sws);
-  // ion detector on legs
-  const side = new THREE.Group(); side.add(at(box(0.11, 0.39, 0.33, gold), 0, 0.32, 0));
-  side.add(at(box(0.7, 0.01, 0.7, std(0x888888, 0.5, 0.6)), 0, 0.08, 0));
+  // ion detector SIDE (AS12-47-6922): silver box on three legs over a wire-web ground screen, CCIG gauge beside it
+  const side = new THREE.Group();
+  side.add(at(box(0.3, 0.32, 0.26, silver), 0, 0.42, 0));
+  side.add(at(box(0.28, 0.01, 0.24, std(0x9a9a98, 0.2, 0.3)), 0, 0.585, 0));
+  for (let i = 0; i < 3; i++) { const a = i * 2.094; side.add(rod(new THREE.Vector3(Math.cos(a) * 0.1, 0.27, Math.sin(a) * 0.1), new THREE.Vector3(Math.cos(a) * 0.22, 0, Math.sin(a) * 0.22), 0.012, silver)); }
+  const wire = std(0x8c8c8c, 0.5, 0.6);
+  for (let i = 0; i < 6; i++) { const a = i * 1.047; side.add(rod(new THREE.Vector3(0, 0.02, 0), new THREE.Vector3(Math.cos(a) * 0.38, 0.01, Math.sin(a) * 0.38), 0.003, wire)); }
+  for (let i = 0; i < 6; i++) { const a = i * 1.047, b = a + 1.047; for (const r of [0.2, 0.36]) side.add(rod(new THREE.Vector3(Math.cos(a) * r, 0.012, Math.sin(a) * r), new THREE.Vector3(Math.cos(b) * r, 0.012, Math.sin(b) * r), 0.003, wire)); }
+  side.add(at(cyl(0.05, 0.05, 0.14, silver, 12), -0.45, 0.07, 0.1, 0, 0, Math.PI / 2));
   place('alsep_side', side);
   const cover = (() => { const o = box(0.4, 0.05, 0.4, std(0xcfcfcf, 0.4, 0.7)); o.rotation.set(0.2, 0.5, 0.1); return o; })();
   place('pse_cover', cover, 0.02);
-  return shadowAll(g);
+  return dusty(shadowAll(g), grain);
 }
 
 export function buildBackpacks() {

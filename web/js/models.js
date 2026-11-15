@@ -94,7 +94,8 @@ function fallbackLM() {
 
 const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
 
-export async function loadLM() {
+export async function loadLM(say = () => {}) {
+  say('lander model');
   const draco = new DRACOLoader().setDecoderPath('vendor/draco/');
   const tl = new THREE.TextureLoader();
   const [gltf, tFoil, tPanel] = await Promise.all([
@@ -140,6 +141,7 @@ export async function loadLM() {
   // panorama taken near the TV camera (tools/make_lm_impostor.py), turned to face the camera.
   for (const mm of envMats) { mm.colorWrite = false; mm.depthWrite = false; }
   lm.traverse((c) => { if (c.isMesh && c.material.map) { c.material.colorWrite = false; c.material.depthWrite = false; } });
+  say('lander photo');
   const [pFull, pDesc] = await Promise.all([tl.loadAsync('assets/lm_photo_full.png'), tl.loadAsync('assets/lm_photo_descent.png')]);
   const photoMat = (tex) => {
     tex.colorSpace = THREE.NoColorSpace; tex.anisotropy = 4;

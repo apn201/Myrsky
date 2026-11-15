@@ -167,7 +167,7 @@ async function buildWorld(progress) {
   wideMat.userData.uniforms.tRego.value = tRego;
   scene.add(buildWideMesh(wideMat));
   progress('hardware');
-  const lm = await loadLM();
+  const lm = await loadLM((what) => progress('hardware: ' + what));
   scene.add(lm.lm, lm.photo); models.lm = lm;
   models.surveyor = buildSurveyor(); scene.add(models.surveyor.group, models.surveyor.photo);
   models.flag = buildFlag(); scene.add(models.flag);

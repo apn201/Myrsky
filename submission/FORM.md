@@ -23,10 +23,9 @@ Then the info page reveals the trick: there is no camera. The picture is calcula
 
 ### Project Demonstration
 
-Use ONE of these (the video if it is uploaded in time, otherwise the deck):
+https://youtu.be/bli1WI9fx6s
 
-- Video (30 s): `https://youtu.be/XXXXXXXXXXX`  ← paste after upload, set to Public or Unlisted
-- Slide deck (7 slides, PDF): https://github.com/apn201/Myrsky/blob/main/submission/Webcam-Ocean-of-Storms-slides.pdf
+(30 s video, public. Fallback if needed: the 7-slide PDF https://github.com/apn201/Myrsky/blob/main/submission/Webcam-Ocean-of-Storms-slides.pdf)
 
 ### Project
 
@@ -49,7 +48,7 @@ Paste the text below. Put screenshots where the `[IMAGE: ...]` lines are.
 3. Click **REW**, then click it again to go faster: an hour per second, then a day, a week, a month, a year, ten years.
 4. Read the info page: https://apn201.github.io/Myrsky/info.html ("There is no camera").
 
-Also on our own server: https://oos.helppox.com/ (same site). Source code: https://github.com/apn201/Myrsky · Live slide deck: https://apn201.github.io/Myrsky/slides.html
+Also on our own server: https://oos.helppox.com/ (same site). 30 s video: https://youtu.be/bli1WI9fx6s · Source code: https://github.com/apn201/Myrsky · Live slide deck: https://apn201.github.io/Myrsky/slides.html
 
 [IMAGE: 01_page_touchdown.jpg  caption: The webcam page at touchdown, 19 Nov 1969 06:55 UTC. The Sun is 5 degrees up.]
 

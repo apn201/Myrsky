@@ -19,9 +19,9 @@ The rubric is Impact, Creativity, Validity, Relevance, Presentation. The text an
 
 ## Checklist
 
-- [ ] Record and edit the video (VIDEO.md), ≤ 30 s, upload to YouTube as Unlisted or Public
+- [x] Record and edit the video (VIDEO.md), ≤ 30 s, upload to YouTube: https://youtu.be/bli1WI9fx6s (public)
 - [ ] Open the video link, the PDF link and https://apn201.github.io/Myrsky/ in a private window: all open without login
-- [ ] Paste FORM.md into the form; Demo field = video link (or PDF link)
+- [ ] Paste FORM.md into the form; Demo field = https://youtu.be/bli1WI9fx6s
 - [ ] Paste screenshots into Project Details
 - [ ] NASA Data: one row per link (16 rows); Other Data: 8 rows
 - [ ] SI: tick code and text only

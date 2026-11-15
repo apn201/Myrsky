@@ -429,7 +429,7 @@ export function buildRocks(centres, seed = 1, grain = null) {
   };
   const geos = [];
   for (let v = 0; v < 6; v++) {
-    const g = new THREE.IcosahedronGeometry(1, 4);
+    const g = new THREE.IcosahedronGeometry(1, v < 3 ? 4 : 2); // 3 detailed shapes for the few big rocks, 3 light ones for the many small
     const p = g.attributes.position; const o = [rnd() * 50, rnd() * 50, rnd() * 50];
     // a few soft chips: blunt cuts along random directions, rounded by micrometeorite erosion
     const cuts = [0, 1, 2].map(() => { const t = rnd() * 6.28, z = rnd() * 2 - 1, r = Math.sqrt(1 - z * z); return [r * Math.cos(t), z, r * Math.sin(t), 0.55 + rnd() * 0.25]; });
@@ -477,7 +477,7 @@ uniform sampler2D tGrain; varying vec3 vRW; varying vec3 vRN;`)
       p3.set(e, heightAt(e, n) - r * bury * 0.75, -n);
       q.setFromEuler(new THREE.Euler(rnd() * 0.5, rnd() * 6.28, rnd() * 0.5));
       sc.set(r * (0.8 + rnd() * 0.5), r, r * (0.8 + rnd() * 0.5));
-      lists[i % geos.length].push(m4.compose(p3, q, sc).clone());
+      lists[(r > 0.12 ? 0 : 3) + (i % 3)].push(m4.compose(p3, q, sc).clone());
     }
   }
   lists.forEach((l, i) => {

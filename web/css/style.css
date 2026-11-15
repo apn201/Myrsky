@@ -67,3 +67,9 @@ body.embed #view { width: 100vw; height: 100vh; aspect-ratio: auto; border: 0; }
 #caption .srclink { color: #ffd700; }
 ul.src { margin: 2px 0 6px 18px; padding: 0; font-size: 13px; }
 ul.src a { color: #00e; }
+
+/* info page: by the numbers */
+.nums { border-collapse: collapse; margin: 8px 0; }
+.nums td { border-top: 1px dotted #666; padding: 5px 8px; vertical-align: top; }
+.nums td:first-child { color: #ffd700; font: bold 1.25em Arial, Helvetica, sans-serif; white-space: nowrap; text-align: right; }
+@media (max-width: 600px) { .nums td:first-child { white-space: normal; font-size: 1.05em; } }

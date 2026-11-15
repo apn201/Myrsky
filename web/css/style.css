@@ -73,3 +73,6 @@ ul.src a { color: #00e; }
 .nums td { border-top: 1px dotted #666; padding: 5px 8px; vertical-align: top; }
 .nums td:first-child { color: #ffd700; font: bold 1.25em Arial, Helvetica, sans-serif; white-space: nowrap; text-align: right; }
 @media (max-width: 600px) { .nums td:first-child { white-space: normal; font-size: 1.05em; } }
+
+#tele { margin: 14px 0 0; font: 12px/1.45 "Courier New", monospace; color: #7c7; text-align: left; white-space: pre; min-height: 5.8em; }
+@media (max-width: 600px) { #tele { font-size: 9px; } #loading { font-size: 16px; } }

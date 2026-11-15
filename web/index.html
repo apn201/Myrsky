@@ -23,13 +23,36 @@
   <div id="osd"></div>
   <div id="caption" hidden></div>
   <div id="nosignal" hidden>NO SIGNAL<br><small>CAM 2 was not installed yet</small></div>
-  <div id="loading">connecting to camera...</div>
+  <div id="loading"><div id="loadstep">connecting to camera...</div><pre id="tele"></pre></div>
   <script>
   // show load problems on the picture itself, so a visitor can tell us what failed
   (function () {
-    var note = function (t) { var l = document.getElementById('loading'); if (l && !l.hidden) l.textContent += ' | ' + t; };
+    var note = function (t) { var l = document.getElementById('loading'), st = document.getElementById('loadstep'); if (l && !l.hidden && st) st.textContent += ' | ' + t; };
     window.addEventListener('error', function (e) { note(e.message || ('cannot load ' + ((e.target && (e.target.src || e.target.href)) || '?'))); }, true);
     window.addEventListener('unhandledrejection', function (e) { note(String(e.reason && e.reason.message || e.reason)); });
+  })();
+  </script>
+  <script>
+  // live link telemetry while the page loads: real byte counts from the browser, real Earth-Moon distance
+  (function () {
+    var EXPECT = 6.7e6, t0 = performance.now(), spin = ['|', '/', '-', String.fromCharCode(92)], k = 0;
+    var pad = function (s, n) { s = String(s); while (s.length < n) s += ' '; return s; };
+    var tick = function () {
+      var l = document.getElementById('loading'), el = document.getElementById('tele');
+      if (!l || l.hidden || !el) return;
+      var e = performance.getEntriesByType('resource'), b = 0, last = '';
+      for (var i = 0; i < e.length; i++) { b += e[i].decodedBodySize || e[i].transferSize || 0; last = e[i].name.split('/').slice(-2).join('/'); }
+      var f = Math.min(1, b / EXPECT), n = Math.round(f * 24), bar = '';
+      for (var j = 0; j < 24; j++) bar += j < n ? '#' : '.';
+      var dist = '';
+      try { var v = Astronomy.GeoMoon(new Date()), km = Math.hypot(v.x, v.y, v.z) * 149597870.7;
+        dist = 'EARTH-MOON ' + Math.round(km).toLocaleString('en-US') + ' km   LIGHT TIME ' + (km / 299792.458).toFixed(3) + ' s'; } catch (err) {}
+      el.textContent = ['LINK ' + spin[k++ % 4] + '  T+' + ((performance.now() - t0) / 1000).toFixed(1) + ' s',
+        '[' + bar + '] ' + (b / 1e6).toFixed(2) + ' MB  ' + e.length + ' files',
+        'RX ' + pad(last, 34), dist].join(String.fromCharCode(10));
+      setTimeout(tick, 90);
+    };
+    tick();
   })();
   </script>
   <pre id="debug" hidden></pre>

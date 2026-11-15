@@ -92,17 +92,10 @@ function fallbackLM() {
   return { scene: root };
 }
 
-const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
-
 export async function loadLM(say = () => {}) {
-  say('lander model');
-  const draco = new DRACOLoader().setDecoderPath('vendor/draco/');
+  say('lander');
   const tl = new THREE.TextureLoader();
-  const [gltf, tFoil, tPanel] = await Promise.all([
-    withTimeout(new GLTFLoader().setDRACOLoader(draco).loadAsync('assets/lm_nasa.glb'), 12000)
-      .catch((e) => { console.warn('LM model not loaded, using a simple shadow shape:', e.message); return fallbackLM(); }),
-    tl.loadAsync('assets/tex_foil_AS12-47-6988.jpg'), tl.loadAsync('assets/tex_panel_AS12-47-6988.jpg'),
-  ]);
+  const tFoil = tl.load('assets/tex_foil_AS12-47-6988.jpg'), tPanel = tl.load('assets/tex_panel_AS12-47-6988.jpg');
   for (const t of [tFoil, tPanel]) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.NoColorSpace; }
   const env = groundEnv();
   const foilN = foilNormalMap();
@@ -110,37 +103,45 @@ export async function loadLM(say = () => {}) {
   const panel = triplanar(new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.35, roughness: 0.5, envMap: env, side: THREE.DoubleSide }), tPanel, 1.1, 0.45);
   const black = new THREE.MeshStandardMaterial({ color: 0x141414, metalness: 0.3, roughness: 0.45, envMap: env, side: THREE.DoubleSide });
   const grey = new THREE.MeshStandardMaterial({ color: 0x5a5a5a, metalness: 0.6, roughness: 0.4, envMap: env, side: THREE.DoubleSide });
-  const root = gltf.scene;
   const ascent = new THREE.Group(), descent = new THREE.Group();
-  const meshes = [];
-  root.updateMatrixWorld(true);
-  root.traverse((c) => { if (c.isMesh) meshes.push(c); });
-  for (const m of meshes) {
-    m.geometry.computeBoundingBox();
-    const bb = m.geometry.boundingBox.clone().applyMatrix4(m.matrixWorld);
-    const isAscent = bb.min.y > 2.18 && bb.max.y > 2.55 || bb.min.y > 2.43;
-    const c = m.material.color || new THREE.Color(1, 1, 1);
-    let mat;
-    if (m.material.map) { mat = m.material.clone(); mat.envMap = env; mat.roughness = 0.5; }
-    else if (c.r > 0.5 && c.b < 0.25) mat = foil;                                // gold, orange, pale-yellow foil
-    else if (c.r > 0.55 && Math.abs(c.r - c.b) < 0.08) mat = isAscent ? panel : foil; // light panels (silver on the descent stage)
-    else if (c.r < 0.12) mat = black;
-    else mat = isAscent ? panel : grey;
-    const clone = new THREE.Mesh(m.geometry, mat);
-    clone.applyMatrix4(m.matrixWorld);
-    (isAscent ? ascent : descent).add(clone);
-  }
   const lm = new THREE.Group();
   lm.add(descent, ascent);
   lm.scale.setScalar(1.42); // model units -> metres (real diagonal 9.45 m)
   lm.rotation.y = -90 * D2R; // model +z (ladder) faces west
   lm.position.copy(ground('lm', -0.15));
-  shadowAll(lm);
+  let ver = 0;
+  // The 3D model only casts the shadow, so the page does not wait for it: a simple stand-in casts the
+  // shadow at first and NASA's model replaces it when it has arrived and been decoded.
+  const fill = (root) => {
+    ascent.clear(); descent.clear();
+    const meshes = [];
+    root.updateMatrixWorld(true);
+    root.traverse((c) => { if (c.isMesh) meshes.push(c); });
+    for (const m of meshes) {
+      m.geometry.computeBoundingBox();
+      const bb = m.geometry.boundingBox.clone().applyMatrix4(m.matrixWorld);
+      const isAscent = bb.min.y > 2.18 && bb.max.y > 2.55 || bb.min.y > 2.43;
+      const c = m.material.color || new THREE.Color(1, 1, 1);
+      let mat;
+      if (m.material.map) { mat = m.material.clone(); mat.envMap = env; mat.roughness = 0.5; mat.colorWrite = false; mat.depthWrite = false; }
+      else if (c.r > 0.5 && c.b < 0.25) mat = foil;                                // gold, orange, pale-yellow foil
+      else if (c.r > 0.55 && Math.abs(c.r - c.b) < 0.08) mat = isAscent ? panel : foil; // light panels (silver on the descent stage)
+      else if (c.r < 0.12) mat = black;
+      else mat = isAscent ? panel : grey;
+      const clone = new THREE.Mesh(m.geometry, mat);
+      clone.applyMatrix4(m.matrixWorld);
+      (isAscent ? ascent : descent).add(clone);
+    }
+    shadowAll(lm); ver++;
+  };
+  fill(fallbackLM().scene);
+  new GLTFLoader().setDRACOLoader(new DRACOLoader().setDecoderPath('vendor/draco/')).loadAsync('assets/lm_nasa.glb')
+    .then((gltf) => fill(gltf.scene))
+    .catch((e) => console.warn('LM model not loaded, keeping the simple shadow shape:', e.message));
   const envMats = [foil, panel, black, grey];
   // The model only casts the shadow. What the camera sees is the real lander: a cut-out of the crew's
   // panorama taken near the TV camera (tools/make_lm_impostor.py), turned to face the camera.
   for (const mm of envMats) { mm.colorWrite = false; mm.depthWrite = false; }
-  lm.traverse((c) => { if (c.isMesh && c.material.map) { c.material.colorWrite = false; c.material.depthWrite = false; } });
   say('lander photo');
   const [pFull, pDesc] = await Promise.all([tl.loadAsync('assets/lm_photo_full.png'), tl.loadAsync('assets/lm_photo_descent.png')]);
   const photoMat = (tex) => {
@@ -163,6 +164,7 @@ export async function loadLM(say = () => {}) {
   photo.position.copy(ground('lm', 0));
   return {
     lm, ascent, descent, photo, full, desc,
+    get ver() { return ver; }, // changes when the real model replaces the stand-in (shadow map must be redrawn)
     setEnv(i) { for (const mm of envMats) mm.envMapIntensity = i; },
     setPhoto(bright, tint, camPos, liftedOff) {
       full.visible = !liftedOff; desc.visible = liftedOff;

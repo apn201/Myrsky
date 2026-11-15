@@ -20,8 +20,8 @@ function rod(a, b, r, mat) {
   m.position.copy(a).addScaledVector(d, 0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); return m;
 }
 
-// Simple lander made of boxes and struts (model units, as in the NASA glb), used only as a shadow caster
-// when the glb or its Draco decoder fails to load (some browsers block the decoder's worker).
+// Simple lander made of boxes and struts (model units, as in the NASA model): the shadow caster for the
+// first moment, until assets/lm_shadow.bin arrives, or for good if that file cannot load.
 function fallbackLM() {
   const root = new THREE.Group(), mat = new THREE.MeshStandardMaterial({ color: 0x808080 });
   const add = (geo, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); root.add(m); return m; };

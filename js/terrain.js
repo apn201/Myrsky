@@ -125,7 +125,7 @@ export function terrainMaterial(texNear, texWide, heightTex, wideCut = false) {
   mat.userData.uniforms = {
     tNear: { value: texNear }, tWide: { value: texWide }, tHeight: { value: heightTex },
     sunDirW: { value: new THREE.Vector3(0, 1, 0) }, camPos: { value: new THREE.Vector3() },
-    hfOn: { value: 1 }, detailOn: { value: 1 }, albedoGain: { value: 0.11 }, wideCut: { value: wideCut ? 1 : 0 },
+    hfOn: { value: 1 }, detailOn: { value: 1 }, albedoGain: { value: 0.11 }, wideCut: { value: wideCut ? 1 : 0 }, tRego: { value: null },
   };
   mat.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, mat.userData.uniforms);
@@ -136,7 +136,7 @@ export function terrainMaterial(texNear, texWide, heightTex, wideCut = false) {
       .replace('#include <common>', `#include <common>
 varying vec2 vEN; varying vec3 vW;
 uniform sampler2D tNear; uniform sampler2D tWide; uniform sampler2D tHeight;
-uniform vec3 sunDirW; uniform vec3 camPos; uniform float hfOn; uniform float detailOn; uniform float albedoGain; uniform float wideCut;
+uniform vec3 sunDirW; uniform vec3 camPos; uniform float hfOn; uniform float detailOn; uniform float albedoGain; uniform float wideCut; uniform sampler2D tRego;
 float hfShadow = 1.0;
 const vec2 GC = vec2(${G.e.toFixed(1)}, ${G.n.toFixed(1)});
 float hash12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
@@ -153,11 +153,11 @@ float craters(vec2 p, float cell, float density){
     float R = cell * (0.18 + 0.32 * hash12(c + 9.7));
     float r = length(p - ctr) / R;
     float age = 0.35 + 0.65 * hash12(c + 2.2); // old craters are shallow and soft
-    h += (r < 1.0 ? (r * r - 1.0) * 0.17 * R : 0.0) * age + 0.05 * R * age * exp(-pow((r - 1.0) / 0.28, 2.0));
+    h += (r < 1.0 ? (r * r - 1.0) * 0.17 * R : 0.0) * age + 0.022 * R * age * exp(-pow((r - 1.0) / 0.35, 2.0));
   }
   return h;
 }
-float microH(vec2 p){ return 0.55 * (craters(p, 4.0, 0.16) + craters(p + 41.0, 1.3, 0.14) + craters(p + 7.0, 0.4, 0.12)) + 0.03 * fbm(p * 1.3) + 0.012 * fbm(p * 5.0) + 0.004 * fbm(p * 19.0); }
+float microH(vec2 p){ return 0.28 * (craters(p, 4.0, 0.16) + craters(p + 41.0, 1.3, 0.14) + craters(p + 7.0, 0.4, 0.12)) + 0.03 * fbm(p * 1.3) + 0.012 * fbm(p * 5.0) + 0.004 * fbm(p * 19.0); }
 vec2 hUV(vec2 en){ return vec2((en.x - (GC.x - 1024.0)) / 2048.0, ((GC.y + 1024.0) - en.y) / 2048.0); }
 float hAt(vec2 en){ return texture2D(tHeight, hUV(en)).r - dot(en,en) / 3474800.0; }
 float albedoAt(vec2 en){
@@ -177,12 +177,15 @@ float albedoAt(vec2 en){
   float alb = albedoAt(vEN);
   float camD = distance(vW, camPos);
   if (detailOn > 0.5) {
-    float near = 1.0 - smoothstep(10.0, 90.0, camD);
-    float d = fbm(vEN * 3.0) * 0.6 + fbm(vEN * 23.0) * 0.4;
-    alb *= mix(1.0, 0.93 + 0.14 * d, near);
+    // real regolith grain from crew photo AS12-49-7284 at two scales, fading out with distance
+    float near = 1.0 - smoothstep(4.0, 70.0, camD);
+    float mid = 1.0 - smoothstep(30.0, 320.0, camD);
+    float r1 = 1.0 + 1.35 * ((texture2D(tRego, vEN / 0.7).r * 1.99 + texture2D(tRego, mat2(0.36, 0.93, -0.93, 0.36) * vEN / 0.93 + 0.61).r * 1.99) * 0.5 - 1.0);
+    float r2 = texture2D(tRego, mat2(0.8, -0.6, 0.6, 0.8) * vEN / 3.3 + 0.37).r * 1.99;
+    alb *= mix(1.0, r1, near * 0.85) * mix(1.0, r2, mid * 0.45);
   }
   // texture stores albedo/1.9 with the site median at 1.0; Apollo 12 mare normal albedo ~0.11
-  diffuseColor.rgb *= alb * 1.9 * albedoGain * vec3(1.0, 0.985, 0.96);
+  diffuseColor.rgb *= alb * 1.9 * albedoGain * vec3(1.0, 0.97, 0.92); // slightly warm, as in the Hasselblad colour frames
   // terrain shadow toward the Sun
   if (hfOn > 0.5 && sunDirW.y > -0.02) {
     vec3 sd = normalize(sunDirW);
@@ -226,6 +229,6 @@ float albedoAt(vec2 en){
     }
   }`);
   };
-  mat.customProgramCacheKey = () => 'terrain-v7' + (wideCut ? 'w' : '');
+  mat.customProgramCacheKey = () => 'terrain-v8' + (wideCut ? 'w' : '');
   return mat;
 }

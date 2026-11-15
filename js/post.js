@@ -64,7 +64,7 @@ void main(){
   }
   bl *= 0.45;
   c += bl * 0.08;
-  c *= exposure * 1.7;
+  c *= exposure * 1.0;
   // harsh tube response: crushed blacks, clipped whites, high contrast
   vec3 t = 1.0 - exp(-c * 1.35);
   t = pow(t, vec3(1.0 / 2.0));
@@ -93,9 +93,38 @@ uniform float exposure;
 ${common}
 void main(){
   vec2 uv = vUv;
-  if (webcam < 0.5) { // clean view for the layers panel
-    vec3 c = texture2D(tScene, uv).rgb * exposure; c = pow(1.0 - exp(-c * 1.15), vec3(1.0 / 2.2));
-    gl_FragColor = vec4(c * signal, 1.0); return;
+  if (webcam < 1.5) { // HD webcam (1) or completely clean (0): full-resolution picture
+    vec2 c0 = vUv - 0.5; float rr = dot(c0 * vec2(outRes.x / outRes.y, 1.0), c0 * vec2(outRes.x / outRes.y, 1.0));
+    vec2 u2 = vUv;
+    if (webcam > 0.5) {
+      u2 = 0.5 + c0 * (1.0 - 0.02 * rr);                      // slight barrel distortion
+      float band = glitch * step(abs(u2.y - glitchY), 0.03);  // rare torn band
+      u2.x += band * (hash(vec2(floor(u2.y * 90.0), floor(time * 20.0))) - 0.5) * 0.03;
+    }
+    vec3 c = texture2D(tScene, u2).rgb * exposure;
+    if (webcam > 0.5) {
+      // soft lens: a touch of blur and glow around highlights
+      vec2 px = 1.0 / outRes;
+      vec3 s = (texture2D(tScene, u2 + vec2(px.x, 0.0)).rgb + texture2D(tScene, u2 - vec2(px.x, 0.0)).rgb + texture2D(tScene, u2 + vec2(0.0, px.y)).rgb + texture2D(tScene, u2 - vec2(0.0, px.y)).rgb) * 0.25 * exposure;
+      c = mix(c, s, 0.45);
+
+      if (sunAmt > 0.0) {
+        vec2 asp = vec2(outRes.x / outRes.y, 1.0); float ds = length((vUv - sunUV) * asp);
+        c += vec3(0.85, 0.9, 1.0) * sunAmt * (0.025 + 0.2 * exp(-ds * 3.5) + 1.0 * exp(-ds * 14.0));
+        vec2 axis = vec2(0.5) - sunUV;
+        for (int i = 0; i < 3; i++) { float k = float(i) * 0.6 + 0.5; float rad = 0.05 + 0.05 * float(i);
+          float gd = length((vUv - (sunUV + axis * k * 2.0)) * asp); c += vec3(0.8, 0.85, 1.0) * sunAmt * 0.05 * smoothstep(rad, rad * 0.5, gd); }
+      }
+    }
+    c = pow(1.0 - exp(-c * 1.15), vec3(1.0 / 2.2));
+    if (webcam > 0.5) {
+      c *= 1.0 - 0.28 * rr;                                    // vignetting
+      float n = hash(floor(vUv * outRes) + fract(time * 7.13) * 91.0) - 0.5;
+      c += n * (0.018 + 0.06 * gain);                          // sensor noise, more at night
+      c = 0.018 + c * 0.985;                                    // black is never quite black
+      if (burst > 0.0) c = mix(c, vec3(hash(floor(vUv * outRes / 2.0) + time * 13.0)), burst * 0.5);
+    }
+    gl_FragColor = vec4(clamp(c, 0.0, 1.0) * signal, 1.0); return;
   }
   float line = floor(uv.y * res.y);
   // line jitter (sync wobble), stronger in a glitch band
@@ -165,9 +194,9 @@ void main(){
     setSize(w, h) { out.set(w, h); U.outRes.value.set(w, h); aspect = w / h; sizeTargets(); },
     // force: take a new frame now regardless of the frame hold
     render(sceneMain, camera, now = performance.now(), force = false) {
-      const wantClean = U.webcam.value < 0.5;
+      const wantClean = U.webcam.value < 1.5;
       if (wantClean !== clean) { clean = wantClean; sizeTargets(); force = true; }
-      if (force || now - last >= 1000 / FPS || clean) {
+      if (force || now - last >= 1000 / (clean ? 15 : FPS)) {
         last = now; frameNo++;
         U.frameNo.value = frameNo % 1000;
         renderer.setRenderTarget(rtScene); renderer.render(sceneMain, camera);

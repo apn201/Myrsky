@@ -72,11 +72,34 @@ function groundEnv() {
   const t = new THREE.CanvasTexture(c); t.mapping = THREE.EquirectangularReflectionMapping; return t;
 }
 
+// Simple lander made of boxes and struts (model units, as in the NASA glb), used only as a shadow caster
+// when the glb or its Draco decoder fails to load (some browsers block the decoder's worker).
+function fallbackLM() {
+  const root = new THREE.Group(), mat = new THREE.MeshStandardMaterial({ color: 0x808080 });
+  const add = (geo, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); root.add(m); return m; };
+  add(new THREE.CylinderGeometry(1.55, 1.55, 1.5, 8), 0, 1.4, 0).rotation.y = Math.PI / 8; // descent stage
+  add(new THREE.BoxGeometry(2.0, 1.6, 1.9), 0, 3.0, 0);                                  // ascent stage
+  add(new THREE.CylinderGeometry(0.55, 0.55, 0.5, 12), 0, 4.05, -0.3);                     // docking tunnel and tanks
+  for (let i = 0; i < 4; i++) {
+    const a = i * Math.PI / 2, x = Math.sin(a), z = Math.cos(a);
+    const from = new THREE.Vector3(x * 1.4, 1.6, z * 1.4), to = new THREE.Vector3(x * 3.33, 0.12, z * 3.33);
+    const len = from.distanceTo(to);
+    const leg = add(new THREE.CylinderGeometry(0.06, 0.06, len, 6), 0, 0, 0);
+    leg.position.copy(from).add(to).multiplyScalar(0.5);
+    leg.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), to.clone().sub(from).normalize());
+    add(new THREE.CylinderGeometry(0.33, 0.33, 0.1, 12), to.x, 0.06, to.z);              // footpad
+  }
+  return { scene: root };
+}
+
+const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
+
 export async function loadLM() {
   const draco = new DRACOLoader().setDecoderPath('vendor/draco/');
   const tl = new THREE.TextureLoader();
   const [gltf, tFoil, tPanel] = await Promise.all([
-    new GLTFLoader().setDRACOLoader(draco).loadAsync('assets/lm_nasa.glb'),
+    withTimeout(new GLTFLoader().setDRACOLoader(draco).loadAsync('assets/lm_nasa.glb'), 12000)
+      .catch((e) => { console.warn('LM model not loaded, using a simple shadow shape:', e.message); return fallbackLM(); }),
     tl.loadAsync('assets/tex_foil_AS12-47-6988.jpg'), tl.loadAsync('assets/tex_panel_AS12-47-6988.jpg'),
   ]);
   for (const t of [tFoil, tPanel]) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.NoColorSpace; }

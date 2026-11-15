@@ -184,7 +184,7 @@ async function buildWorld(progress) {
   models.rocks = buildRocks([
     { e: CAMERAS[1].pos[0], n: CAMERAS[1].pos[1], r: 30, avoid: [[0, 0, 6], [CAMERAS[1].pos[0], CAMERAS[1].pos[1], 1.2], [-4.2, 14.6, 1], [0.2, 8.5, 2.5]] },
     { e: CAMERAS[2].pos[0], n: CAMERAS[2].pos[1], r: 45, avoid: [[118.1, -103.1, 2.8], [CAMERAS[2].pos[0], CAMERAS[2].pos[1], 1.2]] },
-  ]);
+  ], 1, tRego);
   scene.add(models.rocks);
 }
 
@@ -343,6 +343,14 @@ function placeCamera() {
     const off = Math.abs(((state.yaw - lmBrg + 540) % 360) - 180);
     if (off < state.fov / 2 + 8) state.fov = Math.max(state.fov, 28);
   }
+  // nor past the resolution of the Surveyor cut-out (photo pixels per metre); screen pixels never outnumber photo pixels
+  if (state.t >= DATES.surveyorLands) {
+    const de = POS.surveyor3[0] - c.pos[0], dn = POS.surveyor3[1] - c.pos[1];
+    const d = Math.hypot(de, dn), off = Math.abs(((state.yaw - Math.atan2(de, dn) / D2R + 540) % 360) - 180);
+    const ppm = models.surveyor && models.surveyor.ppm || 114, H = renderer.domElement.height;
+    const minFov = 2 * Math.atan(H / (2 * d * ppm)) / D2R;
+    if (off < state.fov / 2 + 6) state.fov = Math.max(state.fov, minFov);
+  }
   state.yaw = ((state.yaw % 360) + 360) % 360;
   camera.position.copy(w(c.pos[0], c.pos[1], heightAt(...c.pos) + c.h));
   const y = state.yaw * D2R, p = state.pitch * D2R;
@@ -393,12 +401,13 @@ function speedLabel(v) {
   const units = [[31557600, 'yr'], [86400, 'day'], [3600, 'h'], [60, 'min'], [1, 's']];
   for (const [s, u] of units) if (a >= s) return (v < 0 ? '-' : '+') + (a / s).toFixed(a / s < 10 ? 1 : 0) + ' ' + u + '/s';
 }
-let hold = null;
-function bindHold(btn, dir) {
-  const start = (ev) => { ev.preventDefault(); state.live = false; hold = { dir, t0: performance.now() }; btn.classList.add('on'); };
-  const end = () => { if (hold && hold.dir === dir) { hold = null; state.speed = 0; btn.classList.remove('on'); } };
-  btn.addEventListener('pointerdown', start);
-  btn.addEventListener('pointerup', end); btn.addEventListener('pointerleave', end); btn.addEventListener('pointercancel', end);
+// REW / FF: each tap steps to the next speed and the picture keeps running at it, so the stars,
+// shadows and Earth can be watched moving. Tapping the other button starts again at the slowest step.
+const SPEEDS = [3600, 21600, 86400, 604800, 2629800, 31557600, 315576000]; // 1 h, 6 h, 1 day, 1 week, 1 month, 1 year, 10 years per second
+function stepSpeed(dir) {
+  state.live = false;
+  const i = Math.sign(state.speed) === dir ? SPEEDS.findIndex((v) => v > Math.abs(state.speed) * 1.01) : 0;
+  state.speed = dir * SPEEDS[i < 0 ? SPEEDS.length - 1 : i];
 }
 function aimAtEarth(o, t) {
   const sk = skyState(new Date(t));
@@ -453,7 +462,7 @@ function stopTour() {
 window.oosJump = (id) => { const j = JUMPS.find((x) => x.id === id); if (j) jump(j); };
 
 function buildUI() {
-  bindHold($('rew'), -1); bindHold($('ff'), 1);
+  $('rew').onclick = () => stepSpeed(-1); $('ff').onclick = () => stepSpeed(1);
   $('story').onclick = () => (tour ? stopTour() : startTour());
   document.querySelector('.controls').addEventListener('pointerdown', () => tour && stopTour(), true);
   $('jumps').addEventListener('click', () => tour && stopTour(), true);
@@ -594,14 +603,10 @@ function loop(now) {
   requestAnimationFrame(loop);
   const dt = Math.min(0.1, (now - last) / 1000); last = now; frameDt = dt;
   fpsAcc += dt; frame++; if (fpsAcc > 1) { fps = frame / fpsAcc; frame = 0; fpsAcc = 0; }
-  if (hold) {
-    const held = (now - hold.t0) / 1000;
-    state.speed = hold.dir * Math.min(3e8, 120 * Math.exp(held * 2.4));
-  }
   if (state.live) state.t = Date.now();
   else if (state.speed) state.t += state.speed * dt * 1000;
   if (state.t < DATES.rangeStart) { state.t = DATES.rangeStart; state.speed = 0; }
-  if (state.t > Date.now()) { state.t = Date.now(); state.live = true; state.speed = 0; hold = null; }
+  if (state.t > Date.now()) { state.t = Date.now(); state.live = true; state.speed = 0; }
   runGlide(now);
   placeCamera();
   const s = applyTime(state.t);

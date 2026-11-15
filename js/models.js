@@ -249,6 +249,7 @@ export function buildSurveyor() {
   const base = w(e, n, heightAt(e, n));
   return {
     group: g, camera, scoop, photo,
+    get ppm() { const im = states[0].material.uniforms.map.value.image; return im && im.width ? im.width / PW : 114; }, // photo pixels per metre
     setDusty() {}, // the photo carries the paint colour now; the model only casts the shadow
     setPhoto(t, bright, tint, camPos) {
       const st = t < Date.parse('1969-11-20T06:48:52Z') ? 0 : t < Date.parse('1969-11-20T06:50:43Z') ? 1 : 2;
@@ -416,22 +417,49 @@ export function buildWebcam(heading) {
 
 // Procedural rocks around a point. Size-frequency from Surveyor 3 counts in this crater:
 // N(>=y mm) = 3e6 * y^-2.56 per 100 m^2 (JPL PD 125, fig VII-19). Mostly half buried.
-export function buildRocks(centres, seed = 1) {
+export function buildRocks(centres, seed = 1, grain = null) {
   let s = seed; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  // 3D value noise for lumpy, irregular shapes (no single big flat plane, which read as folded paper)
+  const hash = (x, y, z) => { const h = Math.sin(x * 127.1 + y * 311.7 + z * 74.7 + seed * 13.1) * 43758.5453; return h - Math.floor(h); };
+  const vn = (x, y, z) => {
+    const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z), xf = x - xi, yf = y - yi, zf = z - zi;
+    const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf), w2 = zf * zf * (3 - 2 * zf);
+    const l = (a, b, t) => a + (b - a) * t, H = (i, j, k) => hash(xi + i, yi + j, zi + k);
+    return l(l(l(H(0, 0, 0), H(1, 0, 0), u), l(H(0, 1, 0), H(1, 1, 0), u), v), l(l(H(0, 0, 1), H(1, 0, 1), u), l(H(0, 1, 1), H(1, 1, 1), u), v), w2);
+  };
   const geos = [];
-  for (let v = 0; v < 4; v++) {
-    const g = new THREE.IcosahedronGeometry(1, 3);
-    const p = g.attributes.position; const k = [rnd() * 9, rnd() * 9, rnd() * 9];
+  for (let v = 0; v < 6; v++) {
+    const g = new THREE.IcosahedronGeometry(1, 4);
+    const p = g.attributes.position; const o = [rnd() * 50, rnd() * 50, rnd() * 50];
+    // a few soft chips: blunt cuts along random directions, rounded by micrometeorite erosion
+    const cuts = [0, 1, 2].map(() => { const t = rnd() * 6.28, z = rnd() * 2 - 1, r = Math.sqrt(1 - z * z); return [r * Math.cos(t), z, r * Math.sin(t), 0.55 + rnd() * 0.25]; });
     for (let i = 0; i < p.count; i++) {
       const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
-      let f = 1 + 0.22 * Math.sin(x * 3 + k[0]) * Math.sin(y * 3.3 + k[1]) + 0.12 * Math.sin(z * 5.1 + k[2]) + 0.05 * Math.sin(x * 11 + y * 7 + k[1]) + 0.03 * Math.sin(z * 17 - x * 13);
-      // facets: flatten along a few random planes (angular blocks)
-      f *= 1 - 0.25 * Math.max(0, x * Math.cos(k[0]) + z * Math.sin(k[0]) - 0.5);
-      p.setXYZ(i, x * f * (1 + v * 0.1), y * f * 0.75, z * f);
+      let f = 0.78 + 0.34 * vn(x * 1.3 + o[0], y * 1.3 + o[1], z * 1.3 + o[2]) + 0.12 * vn(x * 3.1 + o[1], y * 3.1, z * 3.1 + o[0]) + 0.04 * vn(x * 8 + o[2], y * 8, z * 8);
+      for (const [cx, cy, cz, d] of cuts) { const k = x * cx + y * cy + z * cz; if (k * f > d) f = d / k + (k * f - d) * 0.15 / k; }
+      p.setXYZ(i, x * f * (1 + v * 0.07), y * f * (0.6 + 0.1 * (v % 3)), z * f);
     }
     g.computeVertexNormals(); geos.push(g);
   }
-  const mat = new THREE.MeshStandardMaterial({ color: 0x75706a, roughness: 1.0, flatShading: false }); // basalt, a bit brighter than the soil
+  // dust-coated basalt, about as dark as the soil; the soil's own grain from crew photo AS12-49-7284 is
+  // laid over it (triplanar, world space) so close rocks are not smooth plastic
+  const mat = new THREE.MeshStandardMaterial({ color: 0x625d58, roughness: 1.0 });
+  if (grain) {
+    mat.onBeforeCompile = (sh) => {
+      sh.uniforms.tGrain = { value: grain };
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', `#include <common>
+varying vec3 vRW; varying vec3 vRN;`)
+        .replace('#include <worldpos_vertex>', `#include <worldpos_vertex>
+vec4 rw = modelMatrix * instanceMatrix * vec4(transformed, 1.0); vRW = rw.xyz; vRN = normalize(mat3(modelMatrix * instanceMatrix) * objectNormal);`);
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+uniform sampler2D tGrain; varying vec3 vRW; varying vec3 vRN;`)
+        .replace('#include <map_fragment>', `#include <map_fragment>
+          vec3 bw = pow(abs(vRN), vec3(4.0)); bw /= bw.x + bw.y + bw.z;
+          float gr = texture2D(tGrain, vRW.zy / 0.45).r * bw.x + texture2D(tGrain, vRW.xz / 0.45).r * bw.y + texture2D(tGrain, vRW.xy / 0.45).r * bw.z;
+          diffuseColor.rgb *= 1.0 + 1.1 * (gr * 1.99 - 1.0);`);
+    };
+    mat.customProgramCacheKey = () => 'rock-grain-v1';
+  }
   const group = new THREE.Group();
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), p3 = new THREE.Vector3();
   const lists = geos.map(() => []);

@@ -118,13 +118,18 @@ export function buildWideMesh(material) {
   return m;
 }
 
+// The lunar photometric law below is written but off: the exposure and the photo cut-outs are tuned to
+// plain Lambert ground, and with the law on, down-sun ground comes out 3-4 times brighter. Turning it on
+// needs those tuned again together.
+const LUNAR_PHOTOMETRY = false;
+const HF_STEPS = { value: 56 }; // march steps toward the Sun (shared by every shader that uses the terrain shadow)
 // MeshStandardMaterial with: LROC albedo (near 0.5 m, wide 1 m), fine procedural regolith,
 // and a terrain self-shadow found by marching the height map toward the Sun.
 export function terrainMaterial(texNear, texWide, heightTex, wideCut = false) {
   const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, metalness: 0 });
   mat.userData.uniforms = {
     tNear: { value: texNear }, tWide: { value: texWide }, tHeight: { value: heightTex },
-    sunDirW: { value: new THREE.Vector3(0, 1, 0) }, camPos: { value: new THREE.Vector3() },
+    hfSteps: HF_STEPS, sunDirW: { value: new THREE.Vector3(0, 1, 0) }, camPos: { value: new THREE.Vector3() },
     hfOn: { value: 1 }, detailOn: { value: 1 }, albedoGain: { value: 0.11 }, wideCut: { value: wideCut ? 1 : 0 }, tRego: { value: null },
   };
   mat.onBeforeCompile = (sh) => {
@@ -136,7 +141,7 @@ export function terrainMaterial(texNear, texWide, heightTex, wideCut = false) {
       .replace('#include <common>', `#include <common>
 varying vec2 vEN; varying vec3 vW;
 uniform sampler2D tNear; uniform sampler2D tWide; uniform sampler2D tHeight;
-uniform vec3 sunDirW; uniform vec3 camPos; uniform float hfOn; uniform float detailOn; uniform float albedoGain; uniform float wideCut; uniform sampler2D tRego;
+uniform int hfSteps; uniform vec3 sunDirW; uniform vec3 camPos; uniform float hfOn; uniform float detailOn; uniform float albedoGain; uniform float wideCut; uniform sampler2D tRego;
 float hfShadow = 1.0;
 const vec2 GC = vec2(${G.e.toFixed(1)}, ${G.n.toFixed(1)});
 float hash12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
@@ -167,7 +172,7 @@ float rego(vec2 p){
 }
 float microH(vec2 p){ return 0.28 * (craters(p, 4.0, 0.16) + craters(p + 41.0, 1.3, 0.14) + craters(p + 7.0, 0.4, 0.12)) + 0.03 * fbm(p * 1.3) + 0.012 * fbm(p * 5.0) + 0.004 * fbm(p * 19.0); }
 vec2 hUV(vec2 en){ return vec2((en.x - (GC.x - 1024.0)) / 2048.0, ((GC.y + 1024.0) - en.y) / 2048.0); }
-float hAt(vec2 en){ return texture2D(tHeight, hUV(en)).r - dot(en,en) / 3474800.0; }
+float hAt(vec2 en){ return textureLod(tHeight, hUV(en), 0.0).r - dot(en,en) / 3474800.0; }
 float albedoAt(vec2 en){
   vec2 un = vec2((en.x - (GC.x - 512.0)) / 1024.0, 1.0 - ((en.y - (GC.y - 512.0)) / 1024.0));
   vec2 uw = vec2((en.x - (GC.x - 1024.0)) / 2048.0, 1.0 - ((en.y - (GC.y - 1024.0)) / 2048.0));
@@ -202,7 +207,7 @@ float albedoAt(vec2 en){
     vec2 sdir = vec2(sd.x, -sd.z); float horiz = length(sdir); sdir /= max(horiz, 1e-4);
     float tanEl = sd.y / max(horiz, 1e-4);
     float h0 = vW.y + 0.05; float t = 0.6; float minK = 1.0;
-    for (int i = 0; i < 56; i++) {
+    for (int i = 0; i < hfSteps; i++) { // uniform loop bound: compilers cannot unroll it (fast shader compile)
       vec2 p = vEN + sdir * t;
       float k = (h0 + tanEl * t - hAt(p)) / (t * 0.00931);
       minK = min(minK, k);
@@ -212,6 +217,7 @@ float albedoAt(vec2 en){
     hfShadow = smoothstep(0.0, 1.0, hfShadow);
   }
 `)
+      .replace('#include <lights_fragment_begin>', THREE.ShaderChunk.lights_fragment_begin) // onBeforeCompile sees includes unexpanded
       .replace('getDirectionalLightInfo( directionalLight, directLight );',
         `getDirectionalLightInfo( directionalLight, directLight );
 		{ // lunar photometric function (Lunar-Lambert, McEwen 1991) with a Hapke-style opposition surge,
@@ -221,7 +227,7 @@ float albedoAt(vec2 en){
 		  float g = degrees(acos(clamp(dot(directLight.direction, geometryViewDir), -1.0, 1.0)));
 		  float Lp = clamp(1.0 - 0.019 * g + 2.42e-4 * g * g - 1.46e-6 * g * g * g, 0.0, 1.0);
 		  float Bop = 1.0 + 0.9 / (1.0 + tan(radians(g) * 0.5) / 0.06);
-		  directLight.color *= (2.0 * Lp / (mu0 + mu) + (1.0 - Lp)) * Bop;
+		  ${LUNAR_PHOTOMETRY ? '' : '//'} directLight.color *= (2.0 * Lp / (mu0 + mu) + (1.0 - Lp)) * Bop;
 		  if ( UNROLLED_LOOP_INDEX == 0 ) directLight.color *= hfShadow;
 		}`);
     // fine normal detail near the camera (sub-2 m bumps)
@@ -239,6 +245,49 @@ float albedoAt(vec2 en){
     }
   }`);
   };
-  mat.customProgramCacheKey = () => 'terrain-v9' + (wideCut ? 'w' : '');
+  mat.customProgramCacheKey = () => 'terrain-v12' + (wideCut ? 'w' : '');
   return mat;
+}
+
+// ------------------------------------------------------------------ terrain shadow for objects
+// Hardware, rocks and the photo cut-outs stand in the same hill and crater-rim shadows as the ground:
+// the same march toward the Sun over the height map, per pixel. The uniforms are the terrain's own objects.
+export const TS = { tHeight: null, sunDirW: null, hfOn: null };
+export function useTerrainShadow(U) { TS.tHeight = U.tHeight; TS.sunDirW = U.sunDirW; TS.hfOn = U.hfOn; }
+export const TS_GLSL = `
+uniform sampler2D tsHeight; uniform vec3 tsSun; uniform float tsOn; uniform int tsSteps;
+float tsH(vec2 en){ vec2 uv = vec2((en.x - (${G.e.toFixed(1)} - 1024.0)) / 2048.0, ((${G.n.toFixed(1)} + 1024.0) - en.y) / 2048.0); return textureLod(tsHeight, uv, 0.0).r - dot(en, en) / 3474800.0; }
+float terrainSun(vec3 w){
+  if (tsOn < 0.5 || tsSun.y < -0.02) return 1.0;
+  vec3 sd = normalize(tsSun); vec2 sdir = vec2(sd.x, -sd.z); float horiz = length(sdir); sdir /= max(horiz, 1e-4);
+  float tanEl = sd.y / max(horiz, 1e-4); vec2 en = vec2(w.x, -w.z);
+  float h0 = w.y + 0.05, t = 0.6, minK = 1.0;
+  for (int i = 0; i < tsSteps; i++) { float k = (h0 + tanEl * t - tsH(en + sdir * t)) / (t * 0.00931); minK = min(minK, k); t *= 1.12; if (t > 1500.0) break; }
+  return smoothstep(0.0, 1.0, clamp(0.5 + 0.5 * minK, 0.0, 1.0));
+}`;
+export const tsUniforms = () => ({ tsHeight: TS.tHeight, tsSun: TS.sunDirW, tsOn: TS.hfOn, tsSteps: HF_STEPS });
+// add it to a MeshStandardMaterial (keeps any patch the material already has); the Sun is directional light 0
+export function addTerrainShadow(mat) {
+  const prev = mat.onBeforeCompile, prevKey = mat.customProgramCacheKey.call(mat);
+  mat.onBeforeCompile = (sh, r) => {
+    prev.call(mat, sh, r);
+    Object.assign(sh.uniforms, tsUniforms());
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vTSW;')
+      .replace('#include <project_vertex>', `#include <project_vertex>
+vec4 tsw = vec4(transformed, 1.0);
+#ifdef USE_INSTANCING
+tsw = instanceMatrix * tsw;
+#endif
+vTSW = (modelMatrix * tsw).xyz;`);
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vTSW;' + TS_GLSL)
+      .replace('#include <lights_fragment_begin>', 'float tsShadow = terrainSun(vTSW);\n' + THREE.ShaderChunk.lights_fragment_begin.replace(
+        'getDirectionalLightInfo( directionalLight, directLight );', 'getDirectionalLightInfo( directionalLight, directLight );\n\t\tif ( UNROLLED_LOOP_INDEX == 0 ) directLight.color *= tsShadow;'));
+  };
+  mat.customProgramCacheKey = () => prevKey + '+ts2';
+  return mat;
+}
+export function terrainShadowAll(root) {
+  const done = new Set();
+  root.traverse((c) => { if (c.isMesh && c.material && c.material.isMeshStandardMaterial && !done.has(c.material)) { done.add(c.material); addTerrainShadow(c.material); } });
+  return root;
 }

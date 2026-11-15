@@ -2,7 +2,7 @@
 // Code written with an AI assistant (Claude Code, Anthropic) during NASA Space Apps 2026, 14-15 Nov.
 import * as THREE from 'three';
 import { skyState, sunCovered, eqjFromRaDec, SITE } from './sky.js';
-import { loadTerrain, heightTexture, buildTerrainMesh, buildWideMesh, terrainMaterial, heightAt, lineOfSight } from './terrain.js';
+import { loadTerrain, heightTexture, buildTerrainMesh, buildWideMesh, terrainMaterial, heightAt, lineOfSight, useTerrainShadow, terrainShadowAll } from './terrain.js';
 import { loadLM, buildSurveyor, buildFlag, buildDish, buildSWC, buildALSEP, buildBackpacks, buildWebcam, buildRocks, w } from './models.js';
 import { createPost } from './post.js';
 import { DATES, POS, CAMERAS, OBJECTS, JUMPS, TICKER, TOUR, SRC, PU238_HALF_LIFE_Y, RTG_HEAT0_W } from './data.js';
@@ -162,6 +162,7 @@ async function buildWorld(progress) {
   earthMat.uniforms.map.value = tEarth;
   terrainMat = terrainMaterial(tNear, tWide, heightTexture());
   terrainMat.userData.uniforms.tRego.value = tRego;
+  useTerrainShadow(terrainMat.userData.uniforms); // hardware, rocks and photos share the ground's hill shadows
   scene.add(buildTerrainMesh(terrainMat));
   wideMat = terrainMaterial(tNear, tWide, terrainMat.userData.uniforms.tHeight.value, true);
   wideMat.userData.uniforms.tRego.value = tRego;
@@ -170,14 +171,14 @@ async function buildWorld(progress) {
   const lm = await loadLM((what) => progress('hardware: ' + what));
   scene.add(lm.lm, lm.photo); models.lm = lm;
   models.surveyor = buildSurveyor(); scene.add(models.surveyor.group, models.surveyor.photo);
-  models.flag = buildFlag(); scene.add(models.flag);
-  models.dish = buildDish(); scene.add(models.dish.group);
-  models.swc = buildSWC(); scene.add(models.swc.group);
-  models.alsep = buildALSEP(tRego); scene.add(models.alsep);
-  models.backpacks = buildBackpacks(); scene.add(models.backpacks);
+  models.flag = terrainShadowAll(buildFlag()); scene.add(models.flag);
+  models.dish = buildDish(); terrainShadowAll(models.dish.group); scene.add(models.dish.group);
+  models.swc = buildSWC(); terrainShadowAll(models.swc.group); scene.add(models.swc.group);
+  models.alsep = terrainShadowAll(buildALSEP(tRego)); scene.add(models.alsep);
+  models.backpacks = terrainShadowAll(buildBackpacks()); scene.add(models.backpacks);
   for (const k of [1, 2]) {
     const c = CAMERAS[k];
-    const m = buildWebcam(c.yaw); m.position.copy(w(c.pos[0], c.pos[1], heightAt(...c.pos)));
+    const m = terrainShadowAll(buildWebcam(c.yaw)); m.position.copy(w(c.pos[0], c.pos[1], heightAt(...c.pos)));
     scene.add(m); webcams[k] = m;
   }
   progress('rocks');
@@ -185,10 +186,15 @@ async function buildWorld(progress) {
     { e: CAMERAS[1].pos[0], n: CAMERAS[1].pos[1], r: 30, avoid: [[0, 0, 6], [CAMERAS[1].pos[0], CAMERAS[1].pos[1], 1.2], [-4.2, 14.6, 1], [0.2, 8.5, 2.5]] },
     { e: CAMERAS[2].pos[0], n: CAMERAS[2].pos[1], r: 45, avoid: [[118.1, -103.1, 2.8], [CAMERAS[2].pos[0], CAMERAS[2].pos[1], 1.2]] },
   ], 1, tRego);
+  terrainShadowAll(models.rocks);
   scene.add(models.rocks);
 }
 
 // ------------------------------------------------------------------ time
+// light on the photo cut-outs that does not come straight from the Sun: Earthlight, plus sunlight bounced
+// off the sunlit ground around them (ground albedo 0.11) and the faint scatter from distant slopes
+const fillLight = (physSun, physEarth, s) => new THREE.Color(0.78, 0.85, 1.0).multiplyScalar(physEarth * 0.6)
+  .add(new THREE.Color(1, 0.97, 0.92).multiplyScalar(physSun * Math.max(0, s.sun[2]) * 0.11 * 1.03));
 const between = (t, a, b) => (a == null || t >= a) && (b == null || t < b);
 function applyTime(t) {
   const s = skyState(new Date(t));
@@ -287,9 +293,8 @@ function applyTime(t) {
     const toCam = new THREE.Vector3(camPos.x - M.lm.lm.position.x, 0, camPos.z - M.lm.lm.position.z).normalize();
     const sunH = new THREE.Vector3(sunW.x, 0, sunW.z).normalize();
     const side = THREE.MathUtils.clamp((0.22 + 0.78 * Math.max(0, sunH.dot(toCam))) / (0.22 + 0.78 * 0.44), 0.25, 1.5);
-    const tint = new THREE.Color().copy(sunLight.color).multiplyScalar(physSun * side)
-      .add(new THREE.Color(0.78, 0.85, 1.0).multiplyScalar(physEarth * 0.6));
-    M.lm.setPhoto(0.1 * S, tint, camPos, t >= DATES.liftoff);
+    const sunT = new THREE.Color().copy(sunLight.color).multiplyScalar(physSun * side);
+    M.lm.setPhoto(0.1 * S, sunT, fillLight(physSun, physEarth, s), camPos, t >= DATES.liftoff);
   }
   M.surveyor.group.visible = t >= DATES.surveyorLands;
   M.surveyor.setDusty(t >= DATES.touchdown);
@@ -302,9 +307,8 @@ function applyTime(t) {
     const sunH = new THREE.Vector3(sunW.x, 0, sunW.z).normalize();
     const side = THREE.MathUtils.clamp((0.22 + 0.78 * Math.max(0, sunH.dot(toCam))) / (0.22 + 0.78 * 0.75), 0.25, 1.3);
     const paint = t >= DATES.touchdown ? new THREE.Color(1.0, 0.9, 0.74) : new THREE.Color(1.25, 1.25, 1.22);
-    const tint = new THREE.Color().copy(sunLight.color).multiplyScalar(physSun * side)
-      .add(new THREE.Color(0.78, 0.85, 1.0).multiplyScalar(physEarth * 0.6)).multiply(paint);
-    M.surveyor.setPhoto(t, 0.05 * S, tint, camPos);
+    const sunT = new THREE.Color().copy(sunLight.color).multiplyScalar(physSun * side).multiply(paint);
+    M.surveyor.setPhoto(t, 0.05 * S, sunT, fillLight(physSun, physEarth, s).multiply(paint), camPos);
   }
   M.surveyor.camera.visible = t < Date.parse('1969-11-20T06:48:52Z');
   M.surveyor.scoop.visible = t < Date.parse('1969-11-20T06:50:43Z');
@@ -577,6 +581,7 @@ function openSheet(id) {
 }
 window.oosSheet = openSheet;
 // dev only: save the current frame through tools/devserver.py
+window.oosFrames = (n = 1, dt = 50) => { let t = performance.now(); for (let i = 0; i < n; i++) step(t += dt); }; // draw frames while the tab is hidden
 window.oosState = state; window.oosCams = CAMERAS; window.oosSetCam = setCam;
 window.oosViews = {
   flag: { t: '1969-11-19T12:45:00Z', cam: 1, yaw: 214, pitch: 0, fov: 34 }, upsun: { t: '1969-11-19T12:45:00Z', cam: 1, yaw: 100, pitch: -2, fov: 60 },
@@ -599,8 +604,8 @@ function tickerItem(t) { return TICKER.find((k) => t >= k.from && t < k.to); }
 // ------------------------------------------------------------------ loop
 let burstT = 0;
 let last = performance.now(), lastTick = '', glitchT = 0, frame = 0, fpsAcc = 0, fps = 0;
-function loop(now) {
-  requestAnimationFrame(loop);
+function loop(now) { requestAnimationFrame(loop); step(now); }
+function step(now) {
   const dt = Math.min(0.1, (now - last) / 1000); last = now; frameDt = dt;
   fpsAcc += dt; frame++; if (fpsAcc > 1) { fps = frame / fpsAcc; frame = 0; fpsAcc = 0; }
   if (state.live) state.t = Date.now();

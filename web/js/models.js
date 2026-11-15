@@ -37,7 +37,10 @@ function photoMaterial(tex) {
         vec3 sunL = sunTint * terrainSun(vW), L = sunL + fillTint;
         float sf = dot(sunL, vec3(1.0)) / max(dot(L, vec3(1.0)), 1e-9);
         float l = dot(c, vec3(0.3, 0.59, 0.11));
-        c *= mix(0.3 + (l - 0.3) * 0.75, l, sf) / max(l, 1e-4); // softer contrast in fill light only, colours kept
+        // softer contrast in fill light only: colour gain capped at 3x (more would blow JPEG chroma noise in
+        // the black shadows up into green and purple blotches), the rest of the lift added as neutral grey
+        float tl = mix(0.3 + (l - 0.3) * 0.75, l, sf), k = min(tl / max(l, 1e-4), 3.0);
+        c = c * k + vec3(max(tl - l * k, 0.0));
         gl_FragColor = vec4(c * bright * L, 1.0);
       }`,
     side: THREE.DoubleSide,

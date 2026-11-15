@@ -3,7 +3,10 @@
 NASA Space Apps Challenge 2026, challenge **Abandoned but not Forgotten: Storytelling about NASA's Discarded Equipment on the Moon and Mars**.
 
 **Live:** https://apn201.github.io/Myrsky/
+
 **Submission:** https://www.spaceappschallenge.org/2026/find-a-team/apn201/?tab=project
+
+**Video:** https://youtu.be/bli1WI9fx6s
 
 A forgotten 1997 webcam pointed at the Apollo 12 landing site. Tap REW and it rewinds 57 years: Intrepid lifts off in reverse, the flag goes down, the crew's science station disappears, and Surveyor 3 stands alone in its crater in 1967.
 

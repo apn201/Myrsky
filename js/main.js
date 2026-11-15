@@ -173,7 +173,7 @@ async function buildWorld(progress) {
   models.flag = buildFlag(); scene.add(models.flag);
   models.dish = buildDish(); scene.add(models.dish.group);
   models.swc = buildSWC(); scene.add(models.swc.group);
-  models.alsep = buildALSEP(); scene.add(models.alsep);
+  models.alsep = buildALSEP(tRego); scene.add(models.alsep);
   models.backpacks = buildBackpacks(); scene.add(models.backpacks);
   for (const k of [1, 2]) {
     const c = CAMERAS[k];

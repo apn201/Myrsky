@@ -1,9 +1,8 @@
-// Hardware models. The lunar module is NASA 3D Resources' "Apollo Lunar Module".
+// Hardware models. The lunar module's shadow comes from NASA 3D Resources' "Apollo Lunar Module",
+// simplified to a 172 KB shadow-only mesh (tools/bake_lm_shadow.md); what the camera sees is the crew's photo.
 // Everything else is built from simple shapes at the documented sizes (data/dimensions.csv).
 // Code written with an AI assistant (Claude Code, Anthropic), Nov 2026.
 import * as THREE from 'three';
-import { GLTFLoader } from '../vendor/GLTFLoader.js';
-import { DRACOLoader } from '../vendor/DRACOLoader.js';
 import { heightAt } from './terrain.js';
 import { POS, DATES, T } from './data.js';
 
@@ -19,57 +18,6 @@ function box(x, y, z, mat) { return new THREE.Mesh(new THREE.BoxGeometry(x, y, z
 function rod(a, b, r, mat) {
   const d = new THREE.Vector3().subVectors(b, a); const m = cyl(r, r, d.length(), mat, 6);
   m.position.copy(a).addScaledVector(d, 0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); return m;
-}
-
-// crinkled foil: a procedural normal map
-function foilNormalMap() {
-  const s = 256, c = document.createElement('canvas'); c.width = c.height = s;
-  const g = c.getContext('2d'); const img = g.createImageData(s, s);
-  const hgt = new Float32Array(s * s);
-  for (let k = 0; k < 90; k++) { // random creases
-    const x0 = Math.random() * s, y0 = Math.random() * s, a = Math.random() * Math.PI, len = 20 + Math.random() * 90, amp = (Math.random() - 0.5) * 2;
-    for (let t = -len; t < len; t++) {
-      const x = Math.round(x0 + Math.cos(a) * t), y = Math.round(y0 + Math.sin(a) * t);
-      for (let o = -3; o <= 3; o++) { const xx = (x + Math.round(-Math.sin(a) * o) + s) % s, yy = (y + Math.round(Math.cos(a) * o) + s) % s; hgt[yy * s + xx] += amp * (1 - Math.abs(o) / 4); }
-    }
-  }
-  for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) {
-    const hx = hgt[y * s + (x + 1) % s] - hgt[y * s + (x + s - 1) % s];
-    const hy = hgt[((y + 1) % s) * s + x] - hgt[((y + s - 1) % s) * s + x];
-    const n = new THREE.Vector3(-hx * 0.5, -hy * 0.5, 1).normalize();
-    const i = (y * s + x) * 4; img.data[i] = (n.x * 0.5 + 0.5) * 255; img.data[i + 1] = (n.y * 0.5 + 0.5) * 255; img.data[i + 2] = (n.z * 0.5 + 0.5) * 255; img.data[i + 3] = 255;
-  }
-  g.putImageData(img, 0, 0);
-  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(3, 3); return t;
-}
-
-// Real-photo surface textures, mapped in world space (the NASA model has no useful UVs).
-// Crops of Apollo 12 frame AS12-47-6988 (NASA): descent-stage foil and ascent-stage panels.
-function triplanar(mat, tex, scale, gain = 1) {
-  mat.userData.tri = { value: tex };
-  mat.onBeforeCompile = (sh) => {
-    sh.uniforms.tTri = mat.userData.tri;
-    sh.vertexShader = sh.vertexShader.replace('#include <common>', `#include <common>
-varying vec3 vWP; varying vec3 vWN;`)
-      .replace('#include <worldpos_vertex>', `#include <worldpos_vertex>
-vWP = (modelMatrix * vec4(transformed, 1.0)).xyz; vWN = normalize(mat3(modelMatrix) * objectNormal);`);
-    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
-varying vec3 vWP; varying vec3 vWN; uniform sampler2D tTri;`)
-      .replace('#include <map_fragment>', `
-      vec3 bw = pow(abs(normalize(vWN)), vec3(4.0)); bw /= (bw.x + bw.y + bw.z);
-      vec3 tc = texture2D(tTri, vWP.zy * ${(1 / scale).toFixed(3)}).rgb * bw.x + texture2D(tTri, vWP.xz * ${(1 / scale).toFixed(3)}).rgb * bw.y + texture2D(tTri, vWP.xy * ${(1 / scale).toFixed(3)}).rgb * bw.z;
-      diffuseColor.rgb *= pow(tc, vec3(2.2)) * ${gain.toFixed(2)};`);
-  };
-  mat.customProgramCacheKey = () => 'tri' + scale + '-' + gain;
-  return mat;
-}
-// environment for reflections: black sky, sunlit grey ground below the horizon. Intensity set per frame.
-function groundEnv() {
-  const c = document.createElement('canvas'); c.width = 128; c.height = 64; const g = c.getContext('2d');
-  const gr = g.createLinearGradient(0, 0, 0, 64);
-  gr.addColorStop(0, '#000'); gr.addColorStop(0.49, '#000'); gr.addColorStop(0.52, '#bbb'); gr.addColorStop(1, '#888');
-  g.fillStyle = gr; g.fillRect(0, 0, 128, 64);
-  const t = new THREE.CanvasTexture(c); t.mapping = THREE.EquirectangularReflectionMapping; return t;
 }
 
 // Simple lander made of boxes and struts (model units, as in the NASA glb), used only as a shadow caster
@@ -95,14 +43,7 @@ function fallbackLM() {
 export async function loadLM(say = () => {}) {
   say('lander');
   const tl = new THREE.TextureLoader();
-  const tFoil = tl.load('assets/tex_foil_AS12-47-6988.jpg'), tPanel = tl.load('assets/tex_panel_AS12-47-6988.jpg');
-  for (const t of [tFoil, tPanel]) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.NoColorSpace; }
-  const env = groundEnv();
-  const foilN = foilNormalMap();
-  const foil = triplanar(new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.85, roughness: 0.32, envMap: env, normalMap: foilN, normalScale: new THREE.Vector2(0.9, 0.9), side: THREE.DoubleSide }), tFoil, 0.8, 1.3);
-  const panel = triplanar(new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.35, roughness: 0.5, envMap: env, side: THREE.DoubleSide }), tPanel, 1.1, 0.45);
-  const black = new THREE.MeshStandardMaterial({ color: 0x141414, metalness: 0.3, roughness: 0.45, envMap: env, side: THREE.DoubleSide });
-  const grey = new THREE.MeshStandardMaterial({ color: 0x5a5a5a, metalness: 0.6, roughness: 0.4, envMap: env, side: THREE.DoubleSide });
+  const shadowMat = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, side: THREE.DoubleSide });
   const ascent = new THREE.Group(), descent = new THREE.Group();
   const lm = new THREE.Group();
   lm.add(descent, ascent);
@@ -110,38 +51,24 @@ export async function loadLM(say = () => {}) {
   lm.rotation.y = -90 * D2R; // model +z (ladder) faces west
   lm.position.copy(ground('lm', -0.15));
   let ver = 0;
-  // The 3D model only casts the shadow, so the page does not wait for it: a simple stand-in casts the
-  // shadow at first and NASA's model replaces it when it has arrived and been decoded.
-  const fill = (root) => {
-    ascent.clear(); descent.clear();
-    const meshes = [];
-    root.updateMatrixWorld(true);
-    root.traverse((c) => { if (c.isMesh) meshes.push(c); });
-    for (const m of meshes) {
-      m.geometry.computeBoundingBox();
-      const bb = m.geometry.boundingBox.clone().applyMatrix4(m.matrixWorld);
-      const isAscent = bb.min.y > 2.18 && bb.max.y > 2.55 || bb.min.y > 2.43;
-      const c = m.material.color || new THREE.Color(1, 1, 1);
-      let mat;
-      if (m.material.map) { mat = m.material.clone(); mat.envMap = env; mat.roughness = 0.5; mat.colorWrite = false; mat.depthWrite = false; }
-      else if (c.r > 0.5 && c.b < 0.25) mat = foil;                                // gold, orange, pale-yellow foil
-      else if (c.r > 0.55 && Math.abs(c.r - c.b) < 0.08) mat = isAscent ? panel : foil; // light panels (silver on the descent stage)
-      else if (c.r < 0.12) mat = black;
-      else mat = isAscent ? panel : grey;
-      const clone = new THREE.Mesh(m.geometry, mat);
-      clone.applyMatrix4(m.matrixWorld);
-      (isAscent ? ascent : descent).add(clone);
-    }
+  // The 3D shape only casts the shadow; the camera sees the crew's photo. A box stand-in casts the shadow
+  // from the first frame, and NASA's model, simplified to 4 cm (assets/lm_shadow.bin), replaces it on arrival.
+  const fallback = fallbackLM().scene; fallback.updateMatrixWorld(true);
+  fallback.traverse((m) => { if (m.isMesh) { const c = new THREE.Mesh(m.geometry, shadowMat); c.applyMatrix4(m.matrixWorld); (m.position.y > 2.2 ? ascent : descent).add(c); } });
+  shadowAll(lm);
+  fetch('assets/lm_shadow.bin').then((r) => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); }).then((buf) => {
+    // format: uint32 magic, vertex count, descent index count, ascent index count; float32 grid step;
+    // int16 xyz in grid steps; uint16 triangle indices (descent first)
+    const [magic, nV, nD, nA] = new Uint32Array(buf, 0, 4), G = new Float32Array(buf, 16, 1)[0];
+    if (magic !== 0x4C4D3031) throw new Error('bad file');
+    const q = new Int16Array(buf, 20, nV * 3), pos = new Float32Array(nV * 3);
+    for (let i = 0; i < q.length; i++) pos[i] = q[i] * G;
+    const off = 20 + nV * 6 + ((4 - ((20 + nV * 6) % 4)) % 4), idx = new Uint16Array(buf, off, nD + nA);
+    const part = (from, n) => { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setIndex(new THREE.BufferAttribute(idx.slice(from, from + n), 1)); return new THREE.Mesh(g, shadowMat); };
+    descent.clear(); ascent.clear();
+    descent.add(part(0, nD)); ascent.add(part(nD, nA));
     shadowAll(lm); ver++;
-  };
-  fill(fallbackLM().scene);
-  new GLTFLoader().setDRACOLoader(new DRACOLoader().setDecoderPath('vendor/draco/')).loadAsync('assets/lm_nasa.glb')
-    .then((gltf) => fill(gltf.scene))
-    .catch((e) => console.warn('LM model not loaded, keeping the simple shadow shape:', e.message));
-  const envMats = [foil, panel, black, grey];
-  // The model only casts the shadow. What the camera sees is the real lander: a cut-out of the crew's
-  // panorama taken near the TV camera (tools/make_lm_impostor.py), turned to face the camera.
-  for (const mm of envMats) { mm.colorWrite = false; mm.depthWrite = false; }
+  }).catch((e) => console.warn('LM shadow mesh not loaded, keeping the simple shape:', e.message));
   say('lander photo');
   const [pFull, pDesc] = await Promise.all([tl.loadAsync('assets/lm_photo_full.png'), tl.loadAsync('assets/lm_photo_descent.png')]);
   const photoMat = (tex) => {
@@ -165,7 +92,7 @@ export async function loadLM(say = () => {}) {
   return {
     lm, ascent, descent, photo, full, desc,
     get ver() { return ver; }, // changes when the real model replaces the stand-in (shadow map must be redrawn)
-    setEnv(i) { for (const mm of envMats) mm.envMapIntensity = i; },
+    setEnv() {}, // the 3D shape is invisible (shadow only)
     setPhoto(bright, tint, camPos, liftedOff) {
       full.visible = !liftedOff; desc.visible = liftedOff;
       for (const mm of [full.material, desc.material]) { mm.uniforms.bright.value = bright; mm.uniforms.tint.value.copy(tint); }

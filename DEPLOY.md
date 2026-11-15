@@ -48,15 +48,14 @@ Steps:
      CustomLog /var/log/httpd/oceanofstorms_access.log combined
    </VirtualHost>
    ```
-   The site's own `.htaccess` sets the MIME types (`.wasm` application/wasm, `.glb` model/gltf-binary, `.i16` application/octet-stream), compression and cache headers. It needs `mod_mime`, `mod_deflate` and `mod_headers`; these are on by default in Rocky's httpd. If one is missing, tell me.
+   The site's own `.htaccess` sets the MIME types (`.i16` and `.bin` application/octet-stream), compression and cache headers. It needs `mod_mime`, `mod_deflate` and `mod_headers`; these are on by default in Rocky's httpd. If one is missing, tell me.
 5. `apachectl configtest`. Only if it says `Syntax OK`: `systemctl reload httpd`.
 6. HTTPS: if certbot is installed, run `certbot --apache -d oceanofstorms.example.com --redirect`. If certbot is not installed, tell me and stop here; do not install it without asking.
 7. Firewall: show `firewall-cmd --list-services`. If http or https is missing, ask me before adding it.
 8. Check from the server (use https if step 6 worked, else http):
    - `curl -sI https://oceanofstorms.example.com/` → 200, `text/html`
-   - `curl -sI https://oceanofstorms.example.com/vendor/draco/draco_decoder.wasm` → 200, `application/wasm`
    - `curl -sI https://oceanofstorms.example.com/assets/terrain_1024.i16` → 200
-   - `curl -sI https://oceanofstorms.example.com/assets/lm_nasa.glb` → 200, `model/gltf-binary`
+   - `curl -sI https://oceanofstorms.example.com/assets/lm_shadow.bin` → 200
    - `curl -sI https://oceanofstorms.example.com/assets/` → 403 (no directory listing)
    - `curl -s https://oceanofstorms.example.com/info.html | grep -c "THERE IS NO CAMERA"` → 1
 9. Create `/usr/local/bin/oos-update` so I can update the site later with one command:

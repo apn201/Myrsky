@@ -4,7 +4,7 @@ Options -Indexes
 <IfModule mod_mime.c>
   AddType application/wasm .wasm
   AddType model/gltf-binary .glb
-  AddType application/octet-stream .i16
+  AddType application/octet-stream .i16 .bin
   AddType text/javascript .js .mjs
   AddType application/json .json
 </IfModule>
@@ -14,7 +14,7 @@ Options -Indexes
 </IfModule>
 
 <IfModule mod_headers.c>
-  <FilesMatch "\.(jpg|png|glb|i16|wasm)$">
+  <FilesMatch "\.(jpg|png|bin|i16)$">
     Header set Cache-Control "public, max-age=604800"
   </FilesMatch>
   <FilesMatch "\.(html|js|css|json)$">

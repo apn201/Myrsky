@@ -3,7 +3,7 @@
 // Everything else is built from simple shapes at the documented sizes (data/dimensions.csv).
 // Code written with an AI assistant (Claude Code, Anthropic), Nov 2026.
 import * as THREE from 'three';
-import { heightAt } from './terrain.js';
+import { heightAt, TS_GLSL, tsUniforms } from './terrain.js';
 import { POS, DATES, T } from './data.js';
 
 const D2R = Math.PI / 180;
@@ -18,6 +18,30 @@ function box(x, y, z, mat) { return new THREE.Mesh(new THREE.BoxGeometry(x, y, z
 function rod(a, b, r, mat) {
   const d = new THREE.Vector3().subVectors(b, a); const m = cyl(r, r, d.length(), mat, 6);
   m.position.copy(a).addScaledVector(d, 0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); return m;
+}
+
+// Crew-photo cut-out, relit for the scene. The photo already holds its own sunlit and shaded sides, so
+// it is multiplied by the light that reaches it: sunlight (zero where a hill or the crater rim blocks the
+// Sun, the same march as the ground) plus fill (Earthlight, light bounced off the ground). Where only
+// fill light reaches it, the photo's baked-in sun contrast is flattened, as it would be in soft light.
+function photoMaterial(tex) {
+  tex.colorSpace = THREE.NoColorSpace; tex.anisotropy = 4;
+  return new THREE.ShaderMaterial({
+    uniforms: { map: { value: tex }, bright: { value: 1 }, sunTint: { value: new THREE.Color(1, 1, 1) }, fillTint: { value: new THREE.Color(0, 0, 0) }, ...tsUniforms() },
+    vertexShader: 'varying vec2 vUv; varying vec3 vW; void main(){ vUv = uv; vW = (modelMatrix * vec4(position, 1.0)).xyz; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: `uniform sampler2D map; uniform float bright; uniform vec3 sunTint; uniform vec3 fillTint; varying vec2 vUv; varying vec3 vW;
+      ${TS_GLSL}
+      void main(){
+        vec4 t = texture2D(map, vUv); if (t.a < 0.45) discard;
+        vec3 c = pow(t.rgb, vec3(2.2));
+        vec3 sunL = sunTint * terrainSun(vW), L = sunL + fillTint;
+        float sf = dot(sunL, vec3(1.0)) / max(dot(L, vec3(1.0)), 1e-9);
+        float l = dot(c, vec3(0.3, 0.59, 0.11));
+        c *= mix(0.3 + (l - 0.3) * 0.75, l, sf) / max(l, 1e-4); // softer contrast in fill light only, colours kept
+        gl_FragColor = vec4(c * bright * L, 1.0);
+      }`,
+    side: THREE.DoubleSide,
+  });
 }
 
 // Simple lander made of boxes and struts (model units, as in the NASA model): the shadow caster for the
@@ -71,16 +95,7 @@ export async function loadLM(say = () => {}) {
   }).catch((e) => console.warn('LM shadow mesh not loaded, keeping the simple shape:', e.message));
   say('lander photo');
   const [pFull, pDesc] = await Promise.all([tl.loadAsync('assets/lm_photo_full.png'), tl.loadAsync('assets/lm_photo_descent.png')]);
-  const photoMat = (tex) => {
-    tex.colorSpace = THREE.NoColorSpace; tex.anisotropy = 4;
-    return new THREE.ShaderMaterial({
-      uniforms: { map: { value: tex }, bright: { value: 1 }, tint: { value: new THREE.Color(1, 1, 1) } },
-      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-      fragmentShader: `uniform sampler2D map; uniform float bright; uniform vec3 tint; varying vec2 vUv;
-        void main(){ vec4 t = texture2D(map, vUv); if (t.a < 0.45) discard; gl_FragColor = vec4(pow(t.rgb, vec3(2.2)) * bright * tint, 1.0); }`,
-      side: THREE.DoubleSide,
-    });
-  };
+  const photoMat = photoMaterial;
   // photo geometry: crop 825 x 680 px at 0.0107 m/px; lander axis at 54.5 % across; west footpad 630 px from the top
   const PW = 825 * 0.010687, PH = 680 * 0.010687;
   const geo = new THREE.PlaneGeometry(PW, PH);
@@ -93,9 +108,9 @@ export async function loadLM(say = () => {}) {
     lm, ascent, descent, photo, full, desc,
     get ver() { return ver; }, // changes when the real model replaces the stand-in (shadow map must be redrawn)
     setEnv() {}, // the 3D shape is invisible (shadow only)
-    setPhoto(bright, tint, camPos, liftedOff) {
+    setPhoto(bright, sunTint, fillTint, camPos, liftedOff) {
       full.visible = !liftedOff; desc.visible = liftedOff;
-      for (const mm of [full.material, desc.material]) { mm.uniforms.bright.value = bright; mm.uniforms.tint.value.copy(tint); }
+      for (const mm of [full.material, desc.material]) { mm.uniforms.bright.value = bright; mm.uniforms.sunTint.value.copy(sunTint); mm.uniforms.fillTint.value.copy(fillTint); }
       // face the camera (about the vertical axis), 2 m toward it so the nearest footpad is not buried
       const dx = camPos.x - lm.position.x, dz = camPos.z - lm.position.z, d = Math.hypot(dx, dz);
       photo.rotation.y = Math.atan2(dx, dz);
@@ -160,16 +175,7 @@ export function buildSurveyor() {
   // in three states (complete, TV camera removed, camera and scoop removed). The model casts the shadow.
   g.traverse((c) => { if (c.isMesh) { c.material = c.material.clone(); c.material.colorWrite = false; c.material.depthWrite = false; } });
   const tl = new THREE.TextureLoader();
-  const mk = (file) => {
-    const tex = tl.load(file); tex.colorSpace = THREE.NoColorSpace; tex.anisotropy = 4;
-    return new THREE.ShaderMaterial({
-      uniforms: { map: { value: tex }, bright: { value: 1 }, tint: { value: new THREE.Color(1, 1, 1) } },
-      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-      fragmentShader: `uniform sampler2D map; uniform float bright; uniform vec3 tint; varying vec2 vUv;
-        void main(){ vec4 t = texture2D(map, vUv); if (t.a < 0.45) discard; gl_FragColor = vec4(pow(t.rgb, vec3(2.2)) * bright * tint, 1.0); }`,
-      side: THREE.DoubleSide,
-    });
-  };
+  const mk = (file) => photoMaterial(tl.load(file));
   // crop 710 x 470 (1000-scale) at 0.0068 m per unit; axis at 48.6 %; ground line 400 units from the top
   const PW = 710 * 0.0068, PH = 470 * 0.0068;
   const pg = new THREE.PlaneGeometry(PW, PH); pg.translate(PW * (0.5 - 0.486), PH / 2 - 0.48, 0);
@@ -180,9 +186,9 @@ export function buildSurveyor() {
     group: g, camera, scoop, photo,
     get ppm() { const im = states[0].material.uniforms.map.value.image; return im && im.width ? im.width / PW : 114; }, // photo pixels per metre
     setDusty() {}, // the photo carries the paint colour now; the model only casts the shadow
-    setPhoto(t, bright, tint, camPos) {
+    setPhoto(t, bright, sunTint, fillTint, camPos) {
       const st = t < Date.parse('1969-11-20T06:48:52Z') ? 0 : t < Date.parse('1969-11-20T06:50:43Z') ? 1 : 2;
-      states.forEach((s, i) => { s.visible = i === st; s.material.uniforms.bright.value = bright; s.material.uniforms.tint.value.copy(tint); });
+      states.forEach((s, i) => { s.visible = i === st; const u = s.material.uniforms; u.bright.value = bright; u.sunTint.value.copy(sunTint); u.fillTint.value.copy(fillTint); });
       const dx = camPos.x - base.x, dz = camPos.z - base.z, dd = Math.hypot(dx, dz);
       photo.rotation.y = Math.atan2(dx, dz);
       photo.position.set(base.x + dx / dd * 1.2, base.y, base.z + dz / dd * 1.2);

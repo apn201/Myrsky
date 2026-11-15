@@ -1,3 +1,4 @@
+# Code written with an AI assistant (Claude Code, Anthropic), Nov 2026.
 # Surveyor 3 cut-outs from the hand-made mask (art/surveyor/user/mask_full.png, retouched crop crop_retouched.webp).
 # Run from the repo root: python tools/make_surveyor_from_mask.py web/assets <preview dir>
 from PIL import Image, ImageDraw

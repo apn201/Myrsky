@@ -1,6 +1,6 @@
 # Project page text (NASA Space Apps 2026)
 
-Paste each block into the matching field on the team's Project tab. Replace the `[...]` parts. All English.
+Paste each block into the matching field on the team's Project tab. All English.
 
 ---
 
@@ -14,11 +14,11 @@ A forgotten 1997 webcam pointed at the Apollo 12 landing site on the Moon. It sh
 
 ## Link to Project Demo
 
-[link to the 30-second video or the slide deck]
+https://apn201.github.io/Myrsky/slides.html
 
 ## Link to Final Project
 
-[https://... live site on Helppox]  (test copy: https://apn201.github.io/Myrsky/ , source: https://github.com/apn201/Myrsky)
+https://apn201.github.io/Myrsky/  (source code: https://github.com/apn201/Myrsky)
 
 ## Detailed Project Description
 
@@ -32,7 +32,7 @@ A forgotten 1997 webcam pointed at the Apollo 12 landing site on the Moon. It sh
 
 **Benefits.** Students usually hear about active missions. This puts them at a site where old hardware still stands, lets them discover its history by playing with time, and then shows that what they saw was built from open data and physics. It runs in any modern browser, desktop or phone, with no install, no account and no backend.
 
-**Tools.** JavaScript (ES modules), GLSL, HTML/CSS, three.js, Astronomy Engine, Python (NumPy, Pillow) for data preparation. Static hosting on Apache.
+**Tools.** JavaScript (ES modules), GLSL, HTML/CSS, three.js, Astronomy Engine, Python (NumPy, Pillow) for data preparation. Static hosting (GitHub Pages); no server code.
 
 **What we hope to achieve.** More sites (Apollo 11-17, Lunokhod, Mars landers) using the same "picture as a function of time" approach, and a classroom version where students check the cameras against the astronauts' own photographs.
 
@@ -56,7 +56,7 @@ Yes. The code (JavaScript, GLSL shaders, the Python data-preparation script) and
 - Kaguya Terrain Camera data (JAXA), as part of SLDEM2015.
 - Yale Bright Star Catalogue, 5th revised edition (Hoffleit and Warren), via CDS Strasbourg.
 - Astronomy Engine, Don Cross, MIT licence.
-- three.js (MIT licence), including GLTFLoader and DRACOLoader; Draco decoder (Google, Apache 2.0).
+- three.js (MIT licence).
 - Henriksen et al. (2017), Extracting accurate and precise topography from LROC narrow angle camera stereo observations, Icarus 283.
 - Wagner et al. (2017), Coordinates of anthropogenic features on the Moon, Icarus 283, 92-103.
 - Brian McInall's 2018 planimetric map in the Apollo Lunar Surface Journal was used only as a reference for small-object positions; it is not reproduced.

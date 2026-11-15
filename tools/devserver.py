@@ -1,5 +1,6 @@
 """Local dev server: serves web/ and saves frames posted by window.oosShot(name) to tools/shots/.
 Run: python tools/devserver.py 8137   (development only; the real site is plain static files)
+Code written with an AI assistant (Claude Code, Anthropic), Nov 2026.
 """
 import base64, http.server, os, sys, urllib.parse
 

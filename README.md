@@ -2,7 +2,9 @@
 
 NASA Space Apps Challenge 2026, challenge **Abandoned but not Forgotten: Storytelling about NASA's Discarded Equipment on the Moon and Mars**.
 
-A forgotten 1997 webcam pointed at the Apollo 12 landing site. Press REW and it rewinds 57 years: Intrepid lifts off in reverse, the flag goes down, the crew's science station disappears, and Surveyor 3 stands alone in its crater in 1967.
+**Live:** https://apn201.github.io/Myrsky/
+
+A forgotten 1997 webcam pointed at the Apollo 12 landing site. Tap REW and it rewinds 57 years: Intrepid lifts off in reverse, the flag goes down, the crew's science station disappears, and Surveyor 3 stands alone in its crater in 1967.
 
 Then the info page tells you: **there is no camera.** The picture is calculated in the browser from NASA data: the LROC height model and orbital photo of the site, the LROC coordinates of every piece of hardware, the Sun and Earth positions for the chosen date, and the stars. The cameras are the only invented part.
 
@@ -18,7 +20,7 @@ python -m http.server 8137 --directory web
 
 Then open http://localhost:8137 . Useful URL parameters: `?jump=touchdown`, `?t=1969-11-19T12:41:33Z&cam=1&yaw=245&pitch=4&fov=30`, `?layers=labels,-filter`, `?debug=1`.
 
-No build step, no backend, no CDN: three.js, Astronomy Engine and the Draco decoder are in `web/vendor/`.
+No build step, no backend, no CDN: three.js and Astronomy Engine are in `web/vendor/`.
 
 ## How it works
 
@@ -27,7 +29,7 @@ No build step, no backend, no CDN: three.js, Astronomy Engine and the Draco deco
 | Ground shape | LROC NAC DTM of the Apollo 12 site, 2 m/px; SLDEM2015 out to 12 km | `tools/prepare.py`, `web/js/terrain.js` |
 | Ground brightness | LROC 0.5 m orthophoto M120012135. Its baked-in 2010 shading is divided out using the height model; hardware and its shadows are painted out | `tools/prepare.py` |
 | Hardware positions | LROC anthropogenic objects table (Wagner et al. 2017), Apollo 12 Mission Report fig 3-6 | `web/js/data.js` |
-| Hardware | NASA 3D Resources lunar module; Surveyor 3, ALSEP, flag, dish built from documented sizes | `web/js/models.js` |
+| Hardware | Lunar module and Surveyor 3: cut-outs of crew photos (Apollo 12 panorama, AS12-48-7100), relit in the scene; their shadows come from 3D shapes (NASA 3D Resources lunar module, baked to a shadow-only mesh). ALSEP, flag, dish built from documented sizes | `web/js/models.js`, `tools/make_*` |
 | Sun, Earth, stars | Astronomy Engine; IAU Moon rotation model; Yale Bright Star Catalogue | `web/js/sky.js` |
 | Shadows | shadow map for hardware, plus a height-map ray march toward the Sun for the terrain | `web/js/terrain.js` |
 | Webcam look, autofocus, exposure | one post-process pass | `web/js/post.js` |

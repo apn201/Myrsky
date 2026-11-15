@@ -69,6 +69,25 @@ The visitor counter
 </table>
 <p>Things this page does not show: the astronauts themselves (objects appear at the minute the crew set them up), and the footpaths at the right time. The ground picture is from 2010, so its faint tracks are visible at every date, even 1967.</p>
 
+<h2>By the numbers</h2>
+<p>The picture looks quiet. Behind it, every frame is a small physics calculation. Here is what goes into it (counted from this page's own code and data):</p>
+<table class="nums">
+<tr><td>1,048,576</td><td>measured terrain heights, one every 2 metres, from NASA's Lunar Reconnaissance Orbiter (LROC stereo model). Another 65,536 heights carry the ground out to the horizon, 12 km away.</td></tr>
+<tr><td>0.5 m</td><td>size of one pixel of the orbital photo that gives the ground its brightness. Its 2010 shadows were calculated away so that the Sun of any date can light it again.</td></tr>
+<tr><td>5,080</td><td>stars, every one visible to the naked eye (Yale Bright Star Catalogue), each with its own position, brightness and colour, turned with the Moon's real rotation.</td></tr>
+<tr><td>7,707</td><td>rocks near the two cameras, placed with the size distribution Surveyor 3 itself measured in this crater in 1967: many pebbles, few boulders (218 bigger than 24 cm).</td></tr>
+<tr><td>1.9 billion</td><td>seconds between Surveyor 3's landing and today. The Sun, Earth, stars and shadows are calculated fresh for whichever one you pick. Nothing is a recorded video.</td></tr>
+<tr><td>33</td><td>objects and events, each switched on or off at its documented time, many to the second (touchdown 06:54:35 UTC).</td></tr>
+<tr><td>up to 50 million</td><td>terrain-height lookups in every frame, only for the shadows: each ground pixel looks up to 56 steps toward the Sun to find out whether a crater rim is in the way.</td></tr>
+<tr><td>16.8 million</td><td>depth samples in the shadow map, so the lander, flag and rocks cast shadows of the right length.</td></tr>
+<tr><td>1 arcminute</td><td>accuracy of the Sun and Earth positions (Astronomy Engine). At touchdown the page gives a Sun 5.15&deg; above the horizon; the mission documents say 5.1&deg;.</td></tr>
+<tr><td>3</td><td>Apollo 12 crew photographs give the picture its realism: the lander (from the crew's panorama), Surveyor 3 (AS12-48-7100) and the close-up soil grain (AS12-49-7284) are the astronauts' own pictures, relit for each moment.</td></tr>
+<tr><td>31</td><td>sources you can open and check, listed below.</td></tr>
+<tr><td>about 2,800</td><td>lines of our own code: 1,900 of JavaScript and graphics shaders, 450 of HTML and CSS, 430 of Python to prepare the NASA data. On top of that come the open libraries three.js and Astronomy Engine.</td></tr>
+<tr><td>0</td><td>servers doing the work. Everything above is calculated in your own browser, many times a second.</td></tr>
+</table>
+<p>Try it: tap <b>FF</b> three times (one day per second) and watch the shadows swing round, the stars wheel past and Earth change its phase, all from those numbers. <span class="show"><a href="index.html?t=1969-11-19T07:00:00Z">[start at the Apollo 12 landing]</a></span></p>
+
 <h2>Where is the Sun?</h2>
 <p>For every frame the page asks where the Sun and Earth are, using the same kind of calculation NASA's planetary ephemerides use (the Astronomy Engine library). It also needs to know exactly how the Moon is turned, because the Moon rotates once a month and wobbles slightly. A day here lasts about two weeks, then a night of two weeks.</p>
 <p>Check: at Apollo 12's touchdown the documents say the Sun was 5.1 degrees above the horizon. This page calculates 5.15. <span class="show"><a href="index.html?jump=touchdown&layers=labels">[show me]</a></span></p>

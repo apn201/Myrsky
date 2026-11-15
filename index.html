@@ -24,6 +24,14 @@
   <div id="caption" hidden></div>
   <div id="nosignal" hidden>NO SIGNAL<br><small>CAM 2 was not installed yet</small></div>
   <div id="loading">connecting to camera...</div>
+  <script>
+  // show load problems on the picture itself, so a visitor can tell us what failed
+  (function () {
+    var note = function (t) { var l = document.getElementById('loading'); if (l && !l.hidden) l.textContent += ' | ' + t; };
+    window.addEventListener('error', function (e) { note(e.message || ('cannot load ' + ((e.target && (e.target.src || e.target.href)) || '?'))); }, true);
+    window.addEventListener('unhandledrejection', function (e) { note(String(e.reason && e.reason.message || e.reason)); });
+  })();
+  </script>
   <pre id="debug" hidden></pre>
 </div>
 

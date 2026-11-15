@@ -18,16 +18,30 @@
   p, li { font-size: clamp(12px, 1.45vw, 23px); line-height: 1.35; margin: 0 0 0.6em; }
   ul { padding-left: 1.1em; margin: 0; }
   .shot { position: relative; border: 2px inset #777; background: #000; overflow: hidden; align-self: center; aspect-ratio: 16 / 9; }
+  .shot { background: #000 center / cover no-repeat; }
   .shot iframe { width: 100%; height: 100%; border: 0; display: block; }
   .cap { font: clamp(10px, 1vw, 15px) "Courier New", monospace; color: #9c9; margin-top: 0.4em; }
   .foot { position: absolute; bottom: 2.5%; right: 3%; font: clamp(9px, 0.9vw, 14px) "Courier New", monospace; color: #888; }
   .big { font-size: clamp(26px, 6vw, 96px); font-family: "Arial Black", Impact, sans-serif; color: #fff; text-align: center; margin: 0.6em 0 0.3em; }
+  .strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2%; margin-top: 3%; }
+  .strip figure { margin: 0; } .strip img { width: 100%; display: block; border: 2px inset #777; }
+  .strip figcaption { font: clamp(10px, 1vw, 15px) 'Courier New', monospace; color: #9c9; text-align: center; margin-top: 0.3em; }
   table { border-collapse: collapse; width: 100%; font-size: clamp(11px, 1.3vw, 20px); }
   td, th { border: 1px solid #555; padding: 0.3em 0.5em; vertical-align: top; text-align: left; }
   th { color: #ffd700; }
   a { color: #6ab0ff; }
   .nav { position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%); font: 13px Arial, sans-serif; color: #888; }
   .nav button { font: 13px Arial; background: #c0c0c0; border: 2px outset #eee; padding: 2px 10px; }
+  @media print {
+    @page { size: 1600px 900px; margin: 0; }
+    html, body { height: auto; background: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .deck { display: block; height: auto; }
+    .slide, .slide.on { display: grid !important; width: 1600px; height: 900px; aspect-ratio: auto; break-after: page; border: 0; }
+    .slide { grid-template-columns: 38% 1fr; gap: 3%; }
+    .slide.wide { grid-template-columns: 1fr; }
+    h1 { font-size: 64px; } h2 { font-size: 36px; } p, li { font-size: 23px; } table { font-size: 20px; } .big { font-size: 96px; } .cap, .foot { font-size: 14px; }
+    .shot iframe, .nav { display: none !important; }
+  }
 </style>
 </head>
 <body>
@@ -40,7 +54,7 @@
     <p>NASA Space Apps Challenge 2026<br><b>Abandoned but not Forgotten:</b> Storytelling about NASA's Discarded Equipment on the Moon and Mars</p>
     <p>Team: <b>APN201</b><br>Juha Lilja</p>
   </div>
-  <div class="shot" data-src="index.html?embed&amp;t=1969-11-19T12:45:00Z&amp;cam=1&amp;yaw=214&amp;pitch=0&amp;fov=34"></div>
+  <div class="shot" style="background-image:url(assets/slides/04_flag.jpg)" data-src="index.html?embed&amp;t=1969-11-19T12:45:00Z&amp;cam=1&amp;yaw=214&amp;pitch=0&amp;fov=34"></div>
   <div class="foot">1 / 7</div>
 </section>
 
@@ -51,7 +65,7 @@
     <p>Our idea: <b>let them visit one real place</b>, the Apollo 12 site, and travel through its history by playing with time.</p>
     <p>Two NASA machines stand here, 160 m apart: the robot <b>Surveyor 3</b> (1967) and the lunar module <b>Intrepid</b> (1969), plus a flag, a fallen antenna and a science station that ran for 8 years.</p>
   </div>
-  <div class="shot" data-src="index.html?embed&amp;jump=surveyor"></div>
+  <div class="shot" style="background-image:url(assets/slides/02_surveyor_1967.jpg)" data-src="index.html?embed&amp;jump=surveyor"></div>
   <div class="foot">2 / 7 &nbsp; Surveyor 3 alone, April 1967</div>
 </section>
 
@@ -59,14 +73,14 @@
   <div>
     <h2>The experience</h2>
     <ul>
-      <li>Opens on <b>LIVE</b>: tonight it is lunar night, lit by Earth.</li>
+      <li>Opens on <b>LIVE</b>: the site right now, in sunlight or in Earthlight.</li>
       <li>Tap <b>REW</b>, tap again to go faster: hours, days, then years fly by. Hardware appears and vanishes at the exact minute it did.</li>
       <li>Pan, zoom, switch to <b>CAM 2</b> in Surveyor crater.</li>
       <li>Click any object for its story, in plain language, with sources.</li>
       <li>Works on a phone. No install, no login.</li>
     </ul>
   </div>
-  <div class="shot" data-src="index.html?embed&amp;jump=visit"></div>
+  <div class="shot" style="background-image:url(assets/slides/06_visit_cam2.jpg)" data-src="index.html?embed&amp;jump=visit"></div>
   <div class="foot">3 / 7 &nbsp; CAM 2: the crew's visit to Surveyor 3, 20 Nov 1969</div>
 </section>
 
@@ -75,9 +89,9 @@
     <h2>Story mode</h2>
     <p>For school-age visitors: <b>"Tell me the story"</b> plays a 2-minute guided tour with captions.</p>
     <p>Night on the Moon today, Earth in the sky, rewind to 1967, the landing with 5-degree shadows, the flag, the science station and its nuclear generator, the visit to Surveyor, liftoff, the 1977 switch-off, back to live.</p>
-    <p>This slide is running it now.</p>
+    <p>In the live deck (apn201.github.io/Myrsky/slides.html) this slide plays it.</p>
   </div>
-  <div class="shot" data-src="index.html?embed&amp;story"></div>
+  <div class="shot" style="background-image:url(assets/slides/03_touchdown_1969.jpg)" data-src="index.html?embed&amp;story"></div>
   <div class="foot">4 / 7</div>
 </section>
 
@@ -91,6 +105,12 @@
           <td>3D hardware &middot; shadows &middot; rocks below 2 m (from Surveyor 3's own counts) &middot; exposure &middot; autofocus</td>
           <td>The two webcams &middot; the 1997 website</td></tr>
     </table>
+    <div class="strip">
+      <figure><img src="assets/slides/02_surveyor_1967.jpg" alt="Surveyor 3 alone, 1967"><figcaption>24 Apr 1967</figcaption></figure>
+      <figure><img src="assets/slides/04_flag.jpg" alt="Intrepid and the flag, 1969"><figcaption>19 Nov 1969</figcaption></figure>
+      <figure><img src="assets/slides/10_live_night.jpg" alt="The site today"><figcaption>15 Nov 2026</figcaption></figure>
+    </div>
+    <p class="cap" style="text-align:center">Same camera, same place, three dates. Each frame is computed, not filmed.</p>
   </div>
   <div class="foot">5 / 7</div>
 </section>
@@ -107,7 +127,7 @@
     </ul>
     <p>Checks: Sun at touchdown <b>5.15&deg;</b> (documented 5.1&deg;). Sun direction fitted from the 2010 photo's shading <b>272&deg;</b>, computed <b>273&deg;</b>.</p>
   </div>
-  <div class="shot" data-src="index.html?embed&amp;jump=earth"></div>
+  <div class="shot" style="background-image:url(assets/slides/08_earth_1969.jpg)" data-src="index.html?embed&amp;jump=earth"></div>
   <div class="foot">6 / 7 &nbsp; Earth from the site, 19 Nov 1969: a 20% crescent</div>
 </section>
 
@@ -120,16 +140,17 @@
       <li>Mars: Viking, Pathfinder and Sojourner, Spirit, Opportunity, InSight, with HiRISE terrain</li>
       <li>A classroom mode: students check the webcam against the astronauts' own photos</li>
     </ul>
-    <p><b>Try it:</b> <a href="index.html" target="_top">the webcam</a> &middot; <a href="info.html" target="_top">info</a></p>
+    <p><b>Try it:</b> <a href="https://apn201.github.io/Myrsky/" target="_top">apn201.github.io/Myrsky</a><br>Code: <a href="https://github.com/apn201/Myrsky" target="_top">github.com/apn201/Myrsky</a></p>
     <p style="font-size:0.8em;color:#aaa">Code written with an AI assistant (Claude Code). All pictures are live renders from NASA data.</p>
   </div>
-  <div class="shot" data-src="index.html?embed&amp;jump=live"></div>
+  <div class="shot" style="background-image:url(assets/slides/10_live_night.jpg)" data-src="index.html?embed&amp;jump=live"></div>
   <div class="foot">7 / 7 &nbsp; live, right now</div>
 </section>
 
 </div>
 <div class="nav"><button id="prev">&lt;</button> <span id="num"></span> <button id="next">&gt;</button> &nbsp; arrow keys</div>
 <script>
+  const STATIC = new URLSearchParams(location.search).has('static');
   const slides = [...document.querySelectorAll('.slide')];
   let i = Math.max(0, Math.min(slides.length - 1, (parseInt(location.hash.slice(1)) || 1) - 1));
   function show(k) {
@@ -138,7 +159,7 @@
       s.classList.toggle('on', j === i);
       const shot = s.querySelector('.shot');
       if (!shot) return;
-      if (j === i && !shot.firstChild) { const f = document.createElement('iframe'); f.src = shot.dataset.src; f.loading = 'eager'; shot.appendChild(f); }
+      if (j === i && !shot.firstChild && !STATIC) { const f = document.createElement('iframe'); f.src = shot.dataset.src; f.loading = 'eager'; shot.appendChild(f); }
       if (j !== i && shot.firstChild) shot.innerHTML = ''; // one WebGL view at a time
     });
     document.getElementById('num').textContent = (i + 1) + ' / ' + slides.length;

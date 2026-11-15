@@ -157,6 +157,14 @@ float craters(vec2 p, float cell, float density){
   }
   return h;
 }
+// regolith grain tile with its repeat broken up: two differently rotated and shifted lookups, blended by
+// slow noise in patches a few tiles wide; the blend keeps the grain contrast (variance-preserving mix)
+float rego(vec2 p){
+  float w = smoothstep(0.25, 0.75, vnoise(p * 0.29 + 3.1));
+  float a = texture2D(tRego, p).r - 0.5025;
+  float b = texture2D(tRego, mat2(0.6, 0.8, -0.8, 0.6) * p + vec2(0.43, 0.17)).r - 0.5025;
+  return (mix(a, b, w) / sqrt(w * w + (1.0 - w) * (1.0 - w))) * 1.99; // -1..1 around 0
+}
 float microH(vec2 p){ return 0.28 * (craters(p, 4.0, 0.16) + craters(p + 41.0, 1.3, 0.14) + craters(p + 7.0, 0.4, 0.12)) + 0.03 * fbm(p * 1.3) + 0.012 * fbm(p * 5.0) + 0.004 * fbm(p * 19.0); }
 vec2 hUV(vec2 en){ return vec2((en.x - (GC.x - 1024.0)) / 2048.0, ((GC.y + 1024.0) - en.y) / 2048.0); }
 float hAt(vec2 en){ return texture2D(tHeight, hUV(en)).r - dot(en,en) / 3474800.0; }
@@ -180,9 +188,11 @@ float albedoAt(vec2 en){
     // real regolith grain from crew photo AS12-49-7284 at two scales, fading out with distance
     float near = 1.0 - smoothstep(4.0, 70.0, camD);
     float mid = 1.0 - smoothstep(30.0, 320.0, camD);
-    float r1 = 1.0 + 1.35 * ((texture2D(tRego, vEN / 0.7).r * 1.99 + texture2D(tRego, mat2(0.36, 0.93, -0.93, 0.36) * vEN / 0.93 + 0.61).r * 1.99) * 0.5 - 1.0);
-    float r2 = texture2D(tRego, mat2(0.8, -0.6, 0.6, 0.8) * vEN / 3.3 + 0.37).r * 1.99;
-    alb *= mix(1.0, r1, near * 0.85) * mix(1.0, r2, mid * 0.45);
+    float r1 = 1.0 + 1.35 * 0.5 * (rego(vEN / 0.7) + rego(mat2(0.36, 0.93, -0.93, 0.36) * vEN / 0.93 + 0.61));
+    float r2 = 1.0 + 0.7 * rego(mat2(0.8, -0.6, 0.6, 0.8) * vEN / 3.3 + 0.37);
+    // slow patchy brightness so the mid distance does not read as one even carpet
+    float patchy = 1.0 + 0.10 * (fbm(vEN * 0.11 + 7.0) - 0.47);
+    alb *= mix(1.0, r1, near * 0.85) * mix(1.0, r2, mid * 0.45) * mix(1.0, patchy, mid);
   }
   // texture stores albedo/1.9 with the site median at 1.0; Apollo 12 mare normal albedo ~0.11
   diffuseColor.rgb *= alb * 1.9 * albedoGain * vec3(1.0, 0.97, 0.92); // slightly warm, as in the Hasselblad colour frames
@@ -229,6 +239,6 @@ float albedoAt(vec2 en){
     }
   }`);
   };
-  mat.customProgramCacheKey = () => 'terrain-v8' + (wideCut ? 'w' : '');
+  mat.customProgramCacheKey = () => 'terrain-v9' + (wideCut ? 'w' : '');
   return mat;
 }

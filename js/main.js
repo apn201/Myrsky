@@ -317,7 +317,7 @@ function applyTime(t) {
   M.alsep.visible = t >= Date.parse('1969-11-19T13:34:29Z');
   M.backpacks.visible = t >= DATES.backpacks;
   M.rocks.visible = L.rocks;
-  const key = [sunW.x.toFixed(4), sunW.y.toFixed(4), sunW.z.toFixed(4), L.shadows, L.rocks, M.lm.lm.visible, M.lm.ascent.visible, M.surveyor.camera.visible, M.surveyor.scoop.visible,
+  const key = [sunW.x.toFixed(4), sunW.y.toFixed(4), sunW.z.toFixed(4), L.shadows, L.rocks, M.lm.lm.visible, M.lm.ascent.visible, M.lm.ver, M.surveyor.camera.visible, M.surveyor.scoop.visible,
     M.flag.visible, M.dish.group.visible, t >= DATES.dishFalls, M.swc.group.visible, M.alsep.visible, M.backpacks.visible, state.cam].join();
   if (key !== shadowKey) { shadowKey = key; sunLight.shadow.needsUpdate = true; }
   for (const k of [1, 2]) webcams[k].visible = state.cam !== k && (CAMERAS[k].from == null || t >= CAMERAS[k].from);
@@ -645,7 +645,7 @@ function loop(now) {
 
 // ------------------------------------------------------------------ start
 (async function start() {
-  const prog = (w) => ($('loading').textContent = 'connecting to camera... ' + w);
+  const prog = (w) => ($('loadstep').textContent = 'connecting to camera... ' + w);
   buildUI(); buildLabels(); resize();
   try {
     await Promise.all([buildWorld(prog), buildStars()]);

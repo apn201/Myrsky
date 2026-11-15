@@ -11,9 +11,9 @@ Screenshots for the page body are in `submission/screenshots/` (the form takes J
 
 Webcam: Ocean of Storms
 
-### Summary  (limit 1500 characters; this text is 939 characters, 171 words)
+### Summary  (limit 1500 characters; this text is 1096 characters, 202 words)
 
-A forgotten 1997 webcam pointed at the Apollo 12 landing site on the Moon. It shows the site live, tonight. Tap REW and it rewinds 57 years: the lunar module's top half comes back, the flag goes down, the science station disappears, and Surveyor 3 stands alone in its crater in 1967. Every object appears at the minute it really did. A two-minute "Tell me the story" tour walks school-age visitors through what each machine did and what it found out.
+Less than an hour into the first Apollo 12 moonwalk in November 1969, the TV camera was pointed at the Sun and burned out. The world never saw the landing site on TV. Until now. A forgotten 1997 webcam points at the Apollo 12 site. It shows the site live, tonight. Tap REW and it rewinds 57 years: the lunar module's top half comes back, the flag goes down, the science station disappears, and Surveyor 3 stands alone in its crater in 1967. Every object appears at the minute it really did. A two-minute "Tell me the story" tour walks school-age visitors through what each machine did and what it found out.
 
 Then the info page reveals the trick: there is no camera. The picture is calculated in the browser from NASA data: the LROC height model and orbital photo of the site, the measured position of every piece of hardware, mission times to the second, and the real Sun, Earth and stars for any date. It turns abandoned hardware into a place you can visit, and shows young people how open data can rebuild somewhere nobody can go. Runs in any browser, on a phone too, with no install or login.
 
@@ -51,6 +51,8 @@ Paste the text below. Put screenshots where the `[IMAGE: ...]` lines are.
 Also on our own server: https://oos.helppox.com/ (same site). 30 s video: https://youtu.be/bli1WI9fx6s · Source code: https://github.com/apn201/Myrsky · Live slide deck: https://apn201.github.io/Myrsky/slides.html
 
 [IMAGE: 01_page_touchdown.jpg  caption: The webcam page at touchdown, 19 Nov 1969 06:55 UTC. The Sun is 5 degrees up.]
+
+**The missing pictures.** Apollo 12 took the first colour TV camera onto the lunar surface. On 19 November 1969 at 12:20 UTC, while it was being moved, it was pointed at the Sun and its tube burned out. Viewers on Earth saw nothing more of Apollo 12 on the surface; the crew carried the dead camera home. This project gives the site the camera it lost, and points it at the 57 years before and after.
 
 **What it does.** The page looks like an abandoned personal homepage from 1997 with a webcam picture of the Apollo 12 site in the Ocean of Storms. The camera is live: right now it may be lunar night, with stars out and the ground lit by Earthlight. The visitor can pan, zoom, switch between two cameras and move through time. Every object appears and disappears at the minute it really did: Surveyor 3 on 20 April 1967; Intrepid on 19 November 1969 at 06:54:35 UTC; the flag at 12:41; the S-band dish, which a thruster test blew over two hours before liftoff; the ALSEP science station; the backpacks thrown out before launch; Surveyor's TV camera and scoop, which the crew cut off and took home.
 

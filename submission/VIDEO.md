@@ -44,6 +44,7 @@ Title: `Webcam: Ocean of Storms – NASA Space Apps 2026 demo (30 s)`
 
 Description:
 ```
+In 1969, less than an hour into the first Apollo 12 moonwalk, the TV camera was pointed at the Sun and burned out. The world never saw the landing site on TV. Until now.
 A webcam on the Moon that rewinds 57 years. The Apollo 12 landing site, calculated in the browser from NASA LROC data, hardware positions, mission times and the real Sun, Earth and stars.
 Try it: https://oos.helppox.com/
 Also at: https://apn201.github.io/Myrsky/

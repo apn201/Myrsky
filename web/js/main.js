@@ -17,7 +17,8 @@ if (qs.has('embed')) document.body.classList.add('embed');
 
 // ------------------------------------------------------------------ state (the only state)
 const LAYERS = [
-  ['filter', 'Webcam filter', 'Noise and blockiness of a cheap 1997 camera. Gets worse at night, when the camera turns its gain up.'],
+  ['filter', 'Webcam artefacts', 'Noise, soft lens, glare and the odd glitch of a cheap camera. Noise grows at night, when the camera turns its gain up.'],
+  ['tv', '1969 TV look', 'Shows the picture the way Apollo TV pictures looked: few lines, blooming highlights, ghost trails and scan lines.'],
   ['dof', 'Autofocus', 'Blurs what is out of focus. Also hides that the ground near the camera is guessed: the height data has 2 m pixels.'],
   ['shadows', 'Shadows', 'Shadows from the terrain and the hardware, cast by the real Sun direction for this date.'],
   ['sun', 'Sunlight', 'The Sun is the only strong light here. A lunar day lasts about two weeks.'],
@@ -37,6 +38,7 @@ const state = {
   fullscreen: false,
 };
 state.layers.labels = false;
+state.layers.tv = false;
 state.layers.markers = false;
 
 function readURL() {
@@ -154,12 +156,15 @@ async function buildWorld(progress) {
   progress('terrain');
   await loadTerrain();
   const tl = new THREE.TextureLoader();
-  const [tNear, tWide, tEarth] = await Promise.all(['assets/ground_near.jpg', 'assets/ground_wide.jpg', 'assets/earth.jpg'].map((u) => tl.loadAsync(u)));
+  const [tNear, tWide, tEarth, tRego] = await Promise.all(['assets/ground_near.jpg', 'assets/ground_wide.jpg', 'assets/earth.jpg', 'assets/tex_regolith_AS12-49-7284.jpg'].map((u) => tl.loadAsync(u)));
+  tRego.wrapS = tRego.wrapT = THREE.RepeatWrapping; tRego.colorSpace = THREE.NoColorSpace; tRego.anisotropy = renderer.capabilities.getMaxAnisotropy();
   for (const t of [tNear, tWide]) { t.anisotropy = renderer.capabilities.getMaxAnisotropy(); t.colorSpace = THREE.NoColorSpace; }
   earthMat.uniforms.map.value = tEarth;
   terrainMat = terrainMaterial(tNear, tWide, heightTexture());
+  terrainMat.userData.uniforms.tRego.value = tRego;
   scene.add(buildTerrainMesh(terrainMat));
   wideMat = terrainMaterial(tNear, tWide, terrainMat.userData.uniforms.tHeight.value, true);
+  wideMat.userData.uniforms.tRego.value = tRego;
   scene.add(buildWideMesh(wideMat));
   progress('hardware');
   const lm = await loadLM();
@@ -197,7 +202,7 @@ function applyTime(t) {
   sunLight.color.setRGB(1, 1 - 0.55 * cover, 1 - 0.72 * cover);
   const physEarth = L.earthlight ? 3.2 * 8.4e-5 * s.earthLit * THREE.MathUtils.smoothstep(s.earthAzEl.el, -1, 2) : 0;
   // auto exposure: aim for a mid-grey Moon whatever the light
-  const EXPK = 6.5; // auto exposure constant: sunlit mare at mid-grey
+  const EXPK = 15; // auto exposure constant: sunlit mare at mid-grey
   let target = L.exposure ? EXPK / (physSun + physEarth + 2e-7) : EXPK / 3.2;
   // centre-weighted metering: when Earth fills the middle of the frame, expose for Earth instead
   if (L.exposure && L.earth) {
@@ -209,7 +214,7 @@ function applyTime(t) {
     target = Math.exp(Math.log(target) * (1 - wE) + Math.log(earthTarget) * wE);
   }
   target /= 1 + 5 * post.uniforms.sunAmt.value; // the Sun in the frame pulls the auto exposure down
-  const k = Math.min(1, frameDt * (Math.abs(state.speed) > 600 ? 8 : 2.5));
+  const k = Math.min(1, frameDt * (Math.abs(state.speed) > 600 ? 8 : 4));
   gainS = gainS ? Math.exp(Math.log(gainS) + (Math.log(target) - Math.log(gainS)) * k) : target;
   const S = Math.min(gainS, 2e5);
   const camPos = camera.position;
@@ -322,6 +327,7 @@ let gainS = 0, frameDt = 0.016;
 
 // ------------------------------------------------------------------ camera
 function setCam(k, keepView) {
+  if (state.cam !== k) gainS = 0;
   state.cam = k;
   if (!keepView) { state.yaw = CAMERAS[k].yaw; state.pitch = CAMERAS[k].pitch; state.fov = CAMERAS[k].fov; }
   document.querySelectorAll('[data-cam]').forEach((b) => b.classList.toggle('on', +b.dataset.cam === k));
@@ -399,6 +405,7 @@ function aimAtEarth(o, t) {
   o.yaw = sk.earthAzEl.az; o.pitch = Math.min(80, sk.earthAzEl.el);
 }
 function jump(j) {
+  gainS = 0; // a cut: the exposure starts fresh
   if (j.aimEarth) aimAtEarth(j, j.t ?? Date.now());
   if (j.t == null) { state.live = true; state.speed = 0; setCam(j.cam || 1); return; }
   state.live = false; state.speed = 0; state.t = j.t;
@@ -424,6 +431,7 @@ function tourStep(i) {
   tour.i = i;
   const s = TOUR[i];
   const show = () => {
+    if (!s.live || i === 0) gainS = 0;
     if (s.aimEarth) aimAtEarth(s, s.live ? Date.now() : s.t);
     $('caption').innerHTML = (s.label ? `<small>${s.label}</small>` : '') + s.text + (s.src && SRC[s.src] ? ` <a class="srclink" href="${SRC[s.src][1]}" target="_blank" rel="noopener" title="${SRC[s.src][0]}">[source]</a>` : ''); $('caption').hidden = false;
     if (state.cam !== s.cam) { setCam(s.cam, true); state.yaw = s.yaw; state.pitch = s.pitch; state.fov = s.fov; }
@@ -569,7 +577,7 @@ window.oosViews = {
 };
 window.oosShoot = async (names, prefix = '') => {
   for (const n of names) {
-    const v = oosViews[n]; setCam(v.cam, true); state.live = !!v.live; state.speed = 0; if (v.t) state.t = Date.parse(v.t);
+    const v = oosViews[n]; gainS = 0; setCam(v.cam, true); state.live = !!v.live; state.speed = 0; if (v.t) state.t = Date.parse(v.t);
     state.yaw = v.yaw; state.pitch = v.pitch; state.fov = v.fov;
     await new Promise((r) => setTimeout(r, 3000)); await oosShot(prefix + n);
   }
@@ -600,7 +608,7 @@ function loop(now) {
   updateFocus(dt);
   const L = state.layers;
   const webcamOn = L.filter && !state.fullscreen;
-  post.uniforms.webcam.value = webcamOn ? 1 : 0;
+  post.uniforms.webcam.value = webcamOn ? (L.tv ? 2 : 1) : 0;
   post.uniforms.dof.value = L.dof ? 1 : 0;
   post.uniforms.time.value = now / 1000;
   // rare transmission errors

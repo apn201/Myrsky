@@ -395,18 +395,18 @@ export function buildRocks(centres, seed = 1) {
   let s = seed; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
   const geos = [];
   for (let v = 0; v < 4; v++) {
-    const g = new THREE.IcosahedronGeometry(1, 2);
+    const g = new THREE.IcosahedronGeometry(1, 3);
     const p = g.attributes.position; const k = [rnd() * 9, rnd() * 9, rnd() * 9];
     for (let i = 0; i < p.count; i++) {
       const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
-      let f = 1 + 0.22 * Math.sin(x * 3 + k[0]) * Math.sin(y * 3.3 + k[1]) + 0.12 * Math.sin(z * 5.1 + k[2]);
+      let f = 1 + 0.22 * Math.sin(x * 3 + k[0]) * Math.sin(y * 3.3 + k[1]) + 0.12 * Math.sin(z * 5.1 + k[2]) + 0.05 * Math.sin(x * 11 + y * 7 + k[1]) + 0.03 * Math.sin(z * 17 - x * 13);
       // facets: flatten along a few random planes (angular blocks)
       f *= 1 - 0.25 * Math.max(0, x * Math.cos(k[0]) + z * Math.sin(k[0]) - 0.5);
       p.setXYZ(i, x * f * (1 + v * 0.1), y * f * 0.75, z * f);
     }
     g.computeVertexNormals(); geos.push(g);
   }
-  const mat = new THREE.MeshStandardMaterial({ color: 0x4c4946, roughness: 1.0, flatShading: true }); // basalt, a bit brighter than the soil
+  const mat = new THREE.MeshStandardMaterial({ color: 0x75706a, roughness: 1.0, flatShading: false }); // basalt, a bit brighter than the soil
   const group = new THREE.Group();
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), p3 = new THREE.Vector3();
   const lists = geos.map(() => []);

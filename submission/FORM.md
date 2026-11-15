@@ -49,7 +49,7 @@ Paste the text below. Put screenshots where the `[IMAGE: ...]` lines are.
 3. Click **REW**, then click it again to go faster: an hour per second, then a day, a week, a month, a year, ten years.
 4. Read the info page: https://apn201.github.io/Myrsky/info.html ("There is no camera").
 
-Source code: https://github.com/apn201/Myrsky · Live slide deck: https://apn201.github.io/Myrsky/slides.html
+Also on our own server: https://oos.helppox.com/ (same site). Source code: https://github.com/apn201/Myrsky · Live slide deck: https://apn201.github.io/Myrsky/slides.html
 
 [IMAGE: 01_page_touchdown.jpg  caption: The webcam page at touchdown, 19 Nov 1969 06:55 UTC. The Sun is 5 degrees up.]
 

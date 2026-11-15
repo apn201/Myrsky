@@ -30,4 +30,4 @@ from NASA data: terrain, positions, times, Sun and Earth.
 7
 00:00:24,000 --> 00:00:28,000
 Next: every Apollo site, and Mars.
-Try it: apn201.github.io/Myrsky
+Try it: oos.helppox.com
